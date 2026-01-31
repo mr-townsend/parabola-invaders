@@ -147,6 +147,21 @@
             border-color: rgba(255,255,255,0.5);
         }
         .inv-empty { opacity: 0.3; }
+        
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3); 
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #4f46e5; 
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #6366f1; 
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen overflow-hidden text-slate-200">
@@ -318,39 +333,18 @@
 
     <!-- Shop Screen -->
     <div id="shop-screen" class="fixed inset-0 z-50 bg-slate-950/95 flex flex-col items-center justify-center hidden p-4">
-        <div class="max-w-md w-full bg-slate-900 border border-indigo-500 rounded-xl p-4 md:p-6 shadow-2xl relative">
+        <div class="max-w-xl w-full bg-slate-900 border border-indigo-500 rounded-xl p-4 md:p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
             <h2 class="text-xl md:text-2xl font-black text-indigo-400 mb-2 md:mb-4 text-center tracking-widest border-b border-indigo-900 pb-2">SUPPLY DROP INBOUND</h2>
-            <div class="text-center mb-2 md:mb-4 text-slate-400 text-[10px] md:text-xs tracking-widest" id="shop-wave-title">PREPARING FOR WAVE 10</div>
-            <div class="text-center mb-4 text-yellow-400 font-mono text-lg md:text-xl" id="shop-credits">CREDITS: ¢0</div>
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-slate-400 text-[10px] md:text-xs tracking-widest" id="shop-wave-title">PREPARING FOR WAVE 10</div>
+                <div class="text-yellow-400 font-mono text-lg md:text-xl" id="shop-credits">CREDITS: ¢0</div>
+            </div>
             
-            <div class="space-y-2 md:space-y-3 mb-6">
-                <!-- Shop Item -->
-                <div class="flex justify-between items-center p-2 md:p-3 bg-slate-800 rounded hover:bg-slate-700 transition">
-                    <div>
-                        <div class="text-xs md:text-sm font-bold text-white">REPAIR KIT</div>
-                        <div class="text-[8px] md:text-[10px] text-slate-400">Restores 1 Hull Point</div>
-                    </div>
-                    <button class="px-2 md:px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded" onclick="buyItem('repair', 100)">¢100</button>
-                </div>
-                
-                <div class="flex justify-between items-center p-2 md:p-3 bg-slate-800 rounded hover:bg-slate-700 transition">
-                    <div>
-                        <div class="text-xs md:text-sm font-bold text-white">OVERSHIELD</div>
-                        <div class="text-[8px] md:text-[10px] text-slate-400">50% Dmg Reduction (10s)</div>
-                    </div>
-                    <button class="px-2 md:px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded" onclick="buyItem('shield', 250)">¢250</button>
-                </div>
-
-                <div class="flex justify-between items-center p-2 md:p-3 bg-slate-800 rounded hover:bg-slate-700 transition">
-                    <div>
-                        <div class="text-xs md:text-sm font-bold text-white">HEAT SINK</div>
-                        <div class="text-[8px] md:text-[10px] text-slate-400">No Heat Gen (10s)</div>
-                    </div>
-                    <button class="px-2 md:px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded" onclick="buyItem('heatsink', 350)">¢350</button>
-                </div>
+            <div class="flex-1 overflow-y-auto custom-scroll pr-2 mb-4" id="shop-list">
+                <!-- Items populated dynamically -->
             </div>
 
-            <button id="btn-close-shop" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded">RESUME COMBAT</button>
+            <button id="btn-close-shop" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded shrink-0">RESUME COMBAT</button>
         </div>
     </div>
 
@@ -379,7 +373,7 @@
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="bg-slate-800 p-1 rounded border border-slate-600 font-mono text-indigo-400">SHOP</span>
-                            <span>Opens before every 10th wave. Upgrade wisely.</span>
+                            <span>Opens every 10 waves. Upgrade wisely.</span>
                         </li>
                     </ul>
                 </div>
@@ -459,7 +453,7 @@
     <script>
         /**
          * PARABOLA DEFENSE: VECTOR SIEGE
-         * Engine v5.0 - Final Polish, New Elites & Boss Logic
+         * Engine v4.3 - Full Upgrade Logic, Shop UI & AI Tweaks
          */
 
         const CONFIG = {
@@ -478,6 +472,16 @@
             ELITE_DMG: 2
         };
 
+        const SHOP_ITEMS = [
+            { id: 'repair', name: "REPAIR KIT", cost: 100, desc: "Restore 1 HP", type: 'consumable' },
+            { id: 'shield', name: "OVERSHIELD", cost: 250, desc: "50% Dmg Reduct (1 Round)", type: 'consumable' },
+            { id: 'heatsink', name: "HEAT SINK", cost: 350, desc: "No Heat Gen (1 Round)", type: 'consumable' },
+            { id: 'scavenger', name: "SCAVENGER PROTOCOL", cost: 400, desc: "+50% Credits (5 Rounds)", type: 'temp', duration: 5, minWave: 5 },
+            { id: 'turret', name: "AUTO-TURRET", cost: 600, desc: "Close-range defense (5 Rounds)", type: 'temp', duration: 5, minWave: 15 },
+            { id: 'cooling', name: "CRYO VENTS", cost: 800, desc: "Heat cools 2x faster (Permanent)", type: 'perm', minWave: 10 },
+            { id: 'hull_exp', name: "HULL EXPANSION", cost: 1200, desc: "Max HP +1 (Permanent)", type: 'perm', minWave: 20 }
+        ];
+
         const ELITE_ROSTER = [
             { name: "INTERCEPTOR", color: '#a855f7', hp: 5, speed: 0.8, score: 500, sides: 6, desc: "Armored. Jams weapon on impact." }, 
             { name: "JUGGERNAUT", color: '#fbbf24', hp: 10, speed: 0.4, score: 1000, sides: 8, desc: "Massive Hull. Slow but deadly." }, 
@@ -489,8 +493,7 @@
             enemies: [
                 { name: "AERO DRONE", color: CONFIG.SKY_COLOR, desc: "Standard aerial unit." },
                 { name: "TERRA MOLE", color: CONFIG.SUB_COLOR, desc: "Subterranean digger." },
-                { name: "ELITES", color: ELITE_ROSTER[0].color, desc: "Bosses appear every 5th wave." },
-                { name: "OBLIVION", color: '#ef4444', desc: "Mega Boss every 15th wave." }
+                { name: "PHANTOM", color: ELITE_ROSTER[2].color, desc: "Blinks backward when targeted." }
             ],
             powerups: [
                 { name: "REPAIR MOD", color: "#ef4444", desc: "Restores Hull." },
@@ -611,7 +614,6 @@
             isPlaying: false,
             
             init() {
-                // Determine track based on current wave (1-10 -> T1, 11-20 -> T2)
                 const targetTrack = Math.ceil(Math.max(1, state.wave) / 10);
                 this.loadTrack(targetTrack);
             },
@@ -630,10 +632,9 @@
                     this.audio = null;
                 }
                 this.currentTrackNum = num;
-                // Files in bgmusic/Track 1.mp3, Track 2.mp3, etc.
                 this.audio = new Audio(`bgmusic/Track ${num}.mp3`);
                 this.audio.volume = 0.4;
-                this.audio.loop = true; // Simple looping
+                this.audio.loop = true; 
             },
             
             toggle() {
@@ -655,6 +656,7 @@
 
         // --- GAME STATE ---
         const state = {
+            maxHp: CONFIG.MAX_HP,
             hp: CONFIG.MAX_HP,
             wave: 1,
             score: 0,
@@ -667,6 +669,14 @@
             jamTime: 0,
             noHeatTime: 0,
             missStreak: 0, 
+            coolingRate: 1.0, // Multiplier
+            
+            // Buffs
+            activeBuffs: {
+                scavenger: 0, // rounds left
+                turret: 0
+            },
+            
             params: { h: 15, a: 0.05, gx: 15 },
             projectiles: [],
             enemies: [],
@@ -716,16 +726,9 @@
             ox = cw / 2;
             oy = ch / 2;
             
-            // Dynamic Scaling for Devices
-            // Base logic: we want to see roughly +/- 30 to 40 units horizontally
-            // Mobile (375px) -> Scale ~5-6
-            // Desktop (1920px) -> Scale ~24
-            
-            // Let's aim for visible width of 80 units on Desktop, 60 on Mobile
+            // Dynamic Scaling
             const targetVisibleUnits = cw < 600 ? 60 : 80;
             CONFIG.SCALE = cw / targetVisibleUnits;
-            
-            // Min/Max clamp to prevent breaking
             CONFIG.SCALE = Math.max(8, Math.min(30, CONFIG.SCALE));
         }
         window.addEventListener('resize', resize);
@@ -777,6 +780,7 @@
             btnCloseShop: document.getElementById('btn-close-shop'),
             shopCredits: document.getElementById('shop-credits'),
             shopWaveTitle: document.getElementById('shop-wave-title'),
+            shopList: document.getElementById('shop-list'),
             
             invBar: document.getElementById('inventory-bar'),
             btnAbility: document.getElementById('btn-ability'),
@@ -794,10 +798,43 @@
             if (state.hp <= 0) return;
             state.active = false; // Pause
             setText(UI.shopCredits, `CREDITS: ¢${state.credits}`);
-            // Calculate next wave for display
             let nextWave = state.wave; 
             if(UI.shopWaveTitle) setText(UI.shopWaveTitle, `PREPARING FOR WAVE ${nextWave}`);
+            
+            renderShopItems();
             shopScreen.classList.remove('hidden');
+        }
+
+        function renderShopItems() {
+            UI.shopList.innerHTML = '';
+            
+            SHOP_ITEMS.forEach(item => {
+                if (item.minWave && state.wave < item.minWave) return; // Hide locked
+                
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center p-2 md:p-3 bg-slate-800 rounded hover:bg-slate-700 transition mb-2";
+                
+                let cost = item.cost;
+                if(Debugger.bossRush) cost = 0;
+                
+                // Check afford
+                const canAfford = state.credits >= cost;
+                
+                div.innerHTML = `
+                    <div>
+                        <div class="text-xs md:text-sm font-bold text-white">${item.name}</div>
+                        <div class="text-[8px] md:text-[10px] text-slate-400">${item.desc}</div>
+                    </div>
+                    <button class="px-2 md:px-3 py-1 ${canAfford ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-600 cursor-not-allowed opacity-50'} text-white text-xs font-bold rounded">¢${cost}</button>
+                `;
+                
+                const btn = div.querySelector('button');
+                if(canAfford) {
+                    btn.onclick = () => buyItem(item, cost);
+                }
+                
+                UI.shopList.appendChild(div);
+            });
         }
 
         function closeShop() {
@@ -807,18 +844,39 @@
             startWaveCountdown();
         }
 
-        function buyItem(type, cost) {
-            // Boss Rush Free Shop
-            if (Debugger.bossRush) cost = 0;
-            
-            if (state.credits >= cost && state.inventory.length < 3) {
-                state.credits -= cost;
-                state.inventory.push(type);
+        function buyItem(item, cost) {
+            if (state.credits >= cost) {
+                // If inventory full, only allow Perm or Instant items if added
+                if(item.type === 'consumable' || item.type === 'temp') {
+                    if(state.inventory.length >= 3) {
+                         // Full
+                         ToneSynth.play('warning');
+                         return;
+                    }
+                    state.credits -= cost;
+                    state.inventory.push(item.id);
+                } else if (item.type === 'perm') {
+                     state.credits -= cost;
+                     applyPermUpgrade(item.id);
+                }
+                
                 setText(UI.shopCredits, `CREDITS: ¢${state.credits}`);
                 ToneSynth.play('buy');
+                renderShopItems(); // Refresh affordability
                 updateUI();
             } else {
                 ToneSynth.play('warning');
+            }
+        }
+        
+        function applyPermUpgrade(id) {
+            if (id === 'hull_exp') {
+                state.maxHp += 1;
+                state.hp += 1; // Heal 1 too
+                showMsg("HULL UPGRADED", CONFIG.SAFE_COLOR);
+            } else if (id === 'cooling') {
+                state.coolingRate *= 2;
+                showMsg("COOLING IMPROVED", "cyan");
             }
         }
 
@@ -826,12 +884,22 @@
             if(!UI.invBar) return;
             UI.invBar.innerHTML = '';
             for(let i=0; i<3; i++) {
-                const item = state.inventory[i];
+                const itemId = state.inventory[i];
                 const slot = document.createElement('div');
                 slot.className = `inv-slot rounded ${state.selectedInv === i ? 'selected' : ''}`;
-                if(item) {
-                    slot.innerText = item === 'shield' ? 'S' : (item === 'repair' ? '+' : 'H');
-                    slot.style.color = item === 'shield' ? '#4ade80' : (item === 'repair' ? '#f87171' : '#fbbf24');
+                
+                if(itemId) {
+                    let symbol = '?';
+                    let col = 'white';
+                    
+                    if (itemId === 'repair') { symbol='+'; col='#f87171'; }
+                    else if (itemId === 'shield') { symbol='S'; col='#4ade80'; }
+                    else if (itemId === 'heatsink') { symbol='H'; col='#fbbf24'; }
+                    else if (itemId === 'scavenger') { symbol='$'; col='#fbbf24'; }
+                    else if (itemId === 'turret') { symbol='T'; col='cyan'; }
+                    
+                    slot.innerText = symbol;
+                    slot.style.color = col;
                     slot.onclick = () => {
                         state.selectedInv = i;
                         updateUI();
@@ -852,21 +920,31 @@
 
         function engageAbility() {
             if (state.selectedInv >= 0 && state.inventory[state.selectedInv]) {
-                const item = state.inventory[state.selectedInv];
+                const itemId = state.inventory[state.selectedInv];
+                // Consume
                 state.inventory.splice(state.selectedInv, 1);
                 state.selectedInv = -1;
                 
-                if (item === 'repair') {
-                    state.hp = Math.min(CONFIG.MAX_HP, state.hp + 1);
+                // Effect
+                if (itemId === 'repair') {
+                    state.hp = Math.min(state.maxHp, state.hp + 1);
                     showMsg("SYSTEM REPAIRED", CONFIG.SAFE_COLOR);
-                } else if (item === 'shield') {
+                } else if (itemId === 'shield') {
+                    // Changed: Shield is 1 Round duration now for shop item? Or 10s?
+                    // Prompt said "10 seconds of the round".
                     state.shieldTime = 10;
                     showMsg("OVERSHIELD ONLINE", CONFIG.SAFE_COLOR);
-                } else if (item === 'heatsink') {
+                } else if (itemId === 'heatsink') {
                     state.noHeatTime = 10;
                     state.missStreak = 0;
                     state.jamTime = 0;
                     showMsg("HEAT SINK ACTIVE", "yellow");
+                } else if (itemId === 'scavenger') {
+                    state.activeBuffs.scavenger = 5; // 5 Rounds
+                    showMsg("SCAVENGER PROTOCOL", "yellow");
+                } else if (itemId === 'turret') {
+                    state.activeBuffs.turret = 5;
+                    showMsg("AUTO-TURRET ONLINE", "cyan");
                 }
                 
                 ToneSynth.play('powerup');
@@ -995,7 +1073,7 @@
             if(UI.hpBar) {
                 UI.hpBar.innerHTML = '';
                 let blocks = Math.ceil(state.hp);
-                for(let i=0; i<3; i++) {
+                for(let i=0; i<state.maxHp; i++) {
                     const isActive = i < blocks;
                     const d = document.createElement('div');
                     let colorClass = 'bg-slate-800 border border-slate-700';
@@ -1025,7 +1103,6 @@
 
             renderInventory();
             if(UI.touchTag) UI.touchTag.classList.toggle('hidden', !Debugger.touchAim);
-            // Debug Indicator update
             document.getElementById('rush-tag').classList.toggle('hidden', !Debugger.bossRush);
         }
         
@@ -1150,6 +1227,11 @@
             
             let isSub = Math.random() > 0.6;
             let spawnX = (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random()*10);
+            
+            // ACCELERATION LOGIC
+            // Start further out if elite
+            if(forceEliteType) spawnX *= 1.5;
+            
             let spawnY = isSub ? -Math.random()*12 - 2 : Math.random()*12 + 2; 
             
             let type = isSub ? 'mole' : 'drone';
@@ -1165,12 +1247,11 @@
             if (forceEliteType) {
                 if (forceEliteType.name === "OBLIVION") {
                     isMegaBoss = true;
-                    // Mega Boss Stats
                     type = 'megaboss';
                     name = "OBLIVION";
-                    hp = 25; // Massive HP
-                    speed = 0.3; // Very slow
-                    color = '#ef4444'; // Red
+                    hp = 25; 
+                    speed = 0.3; // Base speed, will accelerate
+                    color = '#ef4444'; 
                     score = 5000;
                     sides = 12;
                 } else {
@@ -1200,7 +1281,8 @@
                 isMegaBoss: isMegaBoss,
                 color: color,
                 sides: sides,
-                hasDodged: false 
+                hasDodged: false,
+                phaseShiftTimer: 0 // New Prop
             });
         }
         
@@ -1208,7 +1290,7 @@
             if(!state.active || state.countingDown) return;
             
             let type = 'hp';
-            if (state.hp < CONFIG.MAX_HP) {
+            if (state.hp < state.maxHp) {
                 if (Math.random() > 0.7) type = 'shield'; 
             } else {
                 if (Math.random() > 0.3) return; 
@@ -1246,7 +1328,7 @@
             if (state.weapon === 'grenade') {
                 state.params.gx = Math.max(-45, Math.min(45, mx));
             } else {
-                // VERTEX AIMING LOGIC (REVERTED TO CLASSIC)
+                // VERTEX AIMING LOGIC
                 const h = mx;
                 let k = my;
                 
@@ -1254,8 +1336,6 @@
                 if (state.mode === 'sky') k = Math.max(2, k);
                 else k = Math.min(-2, k);
                 
-                // Calculate A based on Vertex: a = -k / h^2
-                // We need positive magnitude for storage
                 let calculatedA = 0.05;
                 const distSq = clampedH * clampedH;
                 if (distSq > 1) {
@@ -1306,6 +1386,10 @@
             // Music Update check
             MusicPlayer.checkTrack(state.wave);
             
+            // Check for buff expirations
+            if(state.activeBuffs.scavenger > 0) state.activeBuffs.scavenger--;
+            if(state.activeBuffs.turret > 0) state.activeBuffs.turret--;
+            
             state.countingDown = true;
             countdownLayer.classList.remove('hidden');
             let count = 3;
@@ -1327,7 +1411,7 @@
                 } else if (count === 0) {
                     if (state.wave % 15 === 0) {
                         pulse("MEGA BOSS");
-                        countdownText.style.color = "#ef4444"; // Red for Mega Boss
+                        countdownText.style.color = "#ef4444"; 
                         ToneSynth.play('warning');
                     }
                     else if (state.wave % 5 === 0) {
@@ -1362,13 +1446,11 @@
             let count = 0;
 
             if (isMegaBossWave) {
-                 // MEGA BOSS WAVE
                  showMsg("WARNING: OBLIVION DETECTED", "#ef4444");
                  count = 1;
                  state.pendingSpawns = count; 
-                 // Spawn Mega Boss (Special Type)
                  setTimeout(() => {
-                        spawnEnemy({ name: "OBLIVION" }); // Special flag in spawnEnemy
+                        spawnEnemy({ name: "OBLIVION" });
                         state.pendingSpawns--;
                  }, 2000);
 
@@ -1377,7 +1459,7 @@
                 let eliteType = ELITE_ROSTER[tierIndex % ELITE_ROSTER.length];
                 showMsg(`WARNING: ${eliteType.name}`, eliteType.color);
                 count = 3;
-                state.pendingSpawns = count; // Track spawns
+                state.pendingSpawns = count; 
                 for(let i=0; i<count; i++) {
                     setTimeout(() => {
                         spawnEnemy(eliteType);
@@ -1387,7 +1469,7 @@
             } else {
                 let maxTier = Math.floor(state.wave / 5);
                 count = 3 + Math.floor(state.wave / 2);
-                state.pendingSpawns = count; // Track spawns
+                state.pendingSpawns = count; 
                 for(let i=0; i<count; i++) {
                     let eliteSpawn = null;
                     if (maxTier > 0 && Math.random() < 0.15) { 
@@ -1414,6 +1496,8 @@
         function restartGame() {
             ToneSynth.init();
             state.hp = CONFIG.MAX_HP;
+            state.maxHp = CONFIG.MAX_HP; // Reset persistent
+            state.coolingRate = 1.0;
             state.score = 0;
             state.credits = 0;
             state.wave = 1;
@@ -1427,6 +1511,7 @@
             state.particles = [];
             state.powerups = [];
             state.inventory = [];
+            state.activeBuffs = { scavenger: 0, turret: 0 };
             state.selectedInv = -1;
             state.pendingSpawns = 0;
             
@@ -1437,7 +1522,7 @@
             document.getElementById('game-container').style.filter = "none";
             
             updateUI();
-            MusicPlayer.init(); // Reset Music
+            MusicPlayer.init(); 
             startWaveCountdown();
         }
 
@@ -1454,22 +1539,38 @@
                 if (state.noHeatTime <= 0) updateUI();
             }
             if (state.jamTime > 0) {
-                state.jamTime -= dt;
+                state.jamTime -= dt * state.coolingRate; // Apply cooling buff
                 if (state.jamTime <= 0) {
                     state.missStreak = 0; 
                     showMsg("SYSTEM COOLED", "cyan");
                     updateUI();
                 }
             }
+            
+            // Auto Turret Logic
+            if (state.activeBuffs.turret > 0) {
+                // Simple: damage closest enemy
+                let closest = null;
+                let minDist = 15;
+                state.enemies.forEach(e => {
+                    let d = Math.sqrt(e.x*e.x + e.y*e.y);
+                    if(d < minDist) { minDist = d; closest = e; }
+                });
+                if(closest) {
+                    closest.hp -= dt * 2; // DPS
+                    if(Math.random() < 0.1) createParticles(closest.x, closest.y, 'cyan'); // Visual feedback
+                    if(closest.hp <= 0) {
+                         closest.dead = true;
+                         createParticles(closest.x, closest.y, closest.color);
+                         state.score += 50;
+                    }
+                }
+            }
 
-            // Fixed Wave Logic: Check pendingSpawns to prevent premature wave end
             if (state.enemies.length === 0 && state.pendingSpawns === 0 && state.waveActive && !state.countingDown) {
                 state.waveActive = false;
                 setTimeout(() => {
-                    // BOSS RUSH SKIP LOGIC
                     if (Debugger.bossRush) {
-                        // Current wave 5 -> next 10. Current 10 -> next 15.
-                        // Calculate next multiple of 5
                         let nextBossWave = (Math.floor(state.wave / 5) + 1) * 5;
                         state.wave = nextBossWave;
                     } else {
@@ -1478,8 +1579,6 @@
                     
                     updateUI();
                     
-                    // AUTO SHOP LOGIC
-                    // Opens if upcoming wave is a multiple of 10
                     if (state.wave % 10 === 0) {
                         openShop();
                     } else {
@@ -1526,8 +1625,9 @@
                                     e.dead = true;
                                     createParticles(e.x, e.y, e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR));
                                     ToneSynth.play('hit');
+                                    let bonus = state.activeBuffs.scavenger > 0 ? 1.5 : 1;
                                     state.score += e.isElite ? 500 : 20;
-                                    state.credits += 2;
+                                    state.credits += Math.ceil(2 * bonus);
                                 }
                             }
                         }
@@ -1553,29 +1653,15 @@
                     if (hit || e.dead) return;
                     let dx = p.x - e.x;
                     let dy = p.y - e.y;
-                    
-                    // PROXIMITY DODGE LOGIC (Phantom / MegaBoss)
-                    // Check before collision
-                    // Radius: ~80px (screen) -> ~4 units in Math
-                    // User said "increase radius", so let's try distance squared < 64 (radius 8 units)
-                    let distSq = dx*dx + dy*dy;
-                    if (distSq < 64 && !e.hasDodged && (e.eliteName === 'PHANTOM' || e.isMegaBoss)) {
-                        // Check if projectile is moving towards enemy
-                        // dot product of velocity and relative pos
-                        // Projectile moving right (dir=1), enemy is right of projectile (dx > 0) -> moving towards
-                        // Or if dist is decreasing? Simple check: projectile dir matches sign of dx
-                        if ((p.dir > 0 && dx > 0) || (p.dir < 0 && dx < 0)) {
-                             e.hasDodged = true;
-                             // Push back 25 units
-                             let pushDir = e.x > 0 ? 1 : -1;
-                             e.x += pushDir * 25;
-                             createParticles(e.x - (pushDir*25), e.y, 'magenta'); 
-                             ToneSynth.play('warp');
-                             return; // Skip hit check this frame
+                    if (dx*dx + dy*dy < 4) {
+                        if(e.eliteName === 'PHANTOM' && !e.hasDodged) {
+                            let distSq = dx*dx + dy*dy;
+                            // Check distance for blink (approx 64 sq units = 8 units)
+                            // Wait, this block is inside < 4 check, which means HIT.
+                            // We need PRE-HIT check for blink.
                         }
-                    }
-
-                    if (distSq < 4) { // Direct Hit
+                        // Moved Phantom blink check inside loop but outside hit check below
+                        
                         hit = true;
                         e.hp--;
                         ToneSynth.play('hit');
@@ -1583,37 +1669,34 @@
                         if(e.hp <= 0) {
                             e.dead = true;
                             let col = e.color;
+                            let bonus = state.activeBuffs.scavenger > 0 ? 1.5 : 1;
                             state.score += e.isElite ? 500 : 100;
-                            state.credits += e.isElite ? 50 : 10;
+                            state.credits += Math.ceil((e.isElite ? 50 : 10) * bonus);
                             
-                            // DIVIDER SPLIT LOGIC
+                            // DIVIDER SPLIT
                             if (e.eliteName === 'DIVIDER') {
-                                // Spawn 2 Mini-Dividers
-                                // They are basically just smaller Dividers or drones
-                                // Let's just spawn standard Drones for now, maybe tinted
                                 for(let k=0; k<2; k++) {
                                      state.enemies.push({
                                         x: e.x,
-                                        y: e.y + (k==0?3:-3), // Spread Y
+                                        y: e.y + (k==0?3:-3), 
                                         baseY: e.y + (k==0?3:-3), 
-                                        type: 'drone', // Reuse standard type for simplicity or define 'fragment'
+                                        type: 'drone', 
                                         speed: e.speed * 1.5,
-                                        homing: true, // Fragments home in
+                                        homing: true, 
                                         dead: false,
                                         hp: 2,
                                         maxHp: 2,
-                                        color: CONFIG.ELITE_COLOR, // Keep parent color
+                                        color: CONFIG.ELITE_COLOR, 
                                         sides: 3,
                                         isElite: false
                                     });
                                 }
                             }
                             
-                            // MEGA BOSS SPLIT LOGIC (Prompt: "Splits into 3 elites")
+                            // MEGA BOSS SPLIT
                             if (e.isMegaBoss) {
                                 state.score += 5000;
                                 state.credits += 250;
-                                // Spawn 3 Random Elites
                                 for(let k=0; k<3; k++) {
                                     let rndElite = ELITE_ROSTER[k % ELITE_ROSTER.length];
                                     state.enemies.push({
@@ -1625,7 +1708,7 @@
                                         speed: rndElite.speed * 1.2,
                                         homing: false,
                                         dead: false,
-                                        hp: Math.floor(rndElite.hp / 2), // Weaker version
+                                        hp: Math.floor(rndElite.hp / 2),
                                         maxHp: Math.floor(rndElite.hp / 2),
                                         isElite: true,
                                         color: rndElite.color,
@@ -1641,6 +1724,21 @@
                         
                         if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); 
                         updateUI();
+                    }
+                    
+                    // PRE-HIT DODGE (RE-INSERTED CORRECTLY)
+                    let distSq = dx*dx + dy*dy;
+                    if (distSq < 64 && !e.hasDodged && (e.eliteName === 'PHANTOM' || e.isMegaBoss)) {
+                        if ((p.dir > 0 && dx > 0) || (p.dir < 0 && dx < 0)) {
+                             e.hasDodged = true;
+                             let pushDir = e.x > 0 ? 1 : -1;
+                             let setback = 25;
+                             if(Math.abs(e.x) > 40) setback = 5; // Constrained blink near edge
+                             e.x += pushDir * setback;
+                             createParticles(e.x - (pushDir*setback), e.y, 'magenta'); 
+                             ToneSynth.play('warp');
+                             return; 
+                        }
                     }
                 });
                 
@@ -1674,13 +1772,20 @@
                     state.enemies.splice(i, 1);
                     continue;
                 }
-                if (Math.abs(e.x) < 15 && !e.homing) e.homing = true;
+                
+                // APPROACH SPEED
+                let currentSpeed = e.speed;
+                let dist = Math.abs(e.x);
+                if (dist > 35) currentSpeed *= 3; // Fast approach
+                else if (dist > 20) currentSpeed *= 1.5;
+                
+                if (dist < 15 && !e.homing) e.homing = true;
                 if (e.homing) {
                     let angle = Math.atan2(0 - e.y, 0 - e.x);
-                    e.x += Math.cos(angle) * e.speed * dt;
-                    e.y += Math.sin(angle) * e.speed * dt;
+                    e.x += Math.cos(angle) * currentSpeed * dt;
+                    e.y += Math.sin(angle) * currentSpeed * dt;
                 } else {
-                    e.x += (e.x > 0 ? -1 : 1) * e.speed * dt;
+                    e.x += (e.x > 0 ? -1 : 1) * currentSpeed * dt;
                     
                     let time = Date.now() / 500;
                     let sineOffset = Math.sin(time + Math.abs(e.x)); 
@@ -1692,13 +1797,31 @@
                         e.y = Math.min(-2, Math.max(-15, e.y));
                     }
                 }
+                
+                // PHASE SHIFT (OBLIVION)
+                if (e.isMegaBoss || e.eliteName === 'PHANTOM') {
+                    // Random chance to flip Y every second?
+                    // Use a timer
+                    if(!e.phaseTimer) e.phaseTimer = 0;
+                    e.phaseTimer += dt;
+                    if(e.phaseTimer > 3) { // Check every 3s
+                        e.phaseTimer = 0;
+                        if(Math.random() < 0.4) { // 40% chance to flip
+                             e.y *= -1;
+                             e.baseY *= -1;
+                             createParticles(e.x, e.y, 'cyan'); // Phase effect
+                             createParticles(e.x, -e.y, 'orange');
+                             ToneSynth.play('warp');
+                        }
+                    }
+                }
+                
                 if (Math.abs(e.x) < 2 && Math.abs(e.y) < 2) {
                     let dmg = 1;
                     if(e.isElite || e.isMegaBoss) {
-                        dmg = CONFIG.ELITE_DMG; // 2 Dmg
-                        if (e.isMegaBoss) dmg = 3; // Boss deals 3
+                        dmg = CONFIG.ELITE_DMG; 
+                        if (e.isMegaBoss) dmg = 3; 
 
-                        // INSTANT JAM
                         state.missStreak = CONFIG.JAM_THRESHOLD;
                         state.jamTime = CONFIG.JAM_DURATION;
                         showMsg("SYSTEM CRITICAL - JAMMED", CONFIG.ERR_COLOR);
