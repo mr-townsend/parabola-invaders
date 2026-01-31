@@ -48,6 +48,13 @@
             border-radius: 2px;
         }
 
+        /* Volume Slider Specific */
+        #vol-slider::-webkit-slider-thumb {
+            height: 10px;
+            width: 10px;
+            margin-top: -3px;
+        }
+
         /* Mode Colors */
         .theme-sky { color: #38bdf8; --glow: #0ea5e9; }
         .theme-sub { color: #f97316; --glow: #ea580c; }
@@ -196,9 +203,13 @@
 
         <!-- Right: Health & Heat -->
         <div class="flex gap-2 md:gap-4 items-center justify-end w-32 md:w-64">
-            <button id="btn-music" class="w-6 h-6 md:w-8 md:h-8 rounded-full border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition">
-                ♫
-            </button>
+            <!-- Music Control -->
+            <div class="flex items-center gap-1 bg-slate-800/50 rounded-full px-2 py-1 border border-slate-700">
+                <button id="btn-music" class="w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-green-400 transition">
+                    ♫
+                </button>
+                <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.3" class="w-12 h-1 accent-indigo-500 cursor-pointer">
+            </div>
             
             <button id="btn-shop" class="hidden px-2 py-1 md:px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] md:text-xs font-bold rounded border border-indigo-400 shadow-sm">SHOP</button>
             
@@ -611,7 +622,9 @@
         const MusicPlayer = {
             currentTrackNum: 1,
             audio: null,
-            isPlaying: false,
+            isPlaying: true, // Default ON requested
+            volume: 0.3,
+            isMuted: false,
             
             init() {
                 const targetTrack = Math.ceil(Math.max(1, state.wave) / 10);
@@ -622,7 +635,7 @@
                 const targetTrack = Math.ceil(Math.max(1, wave) / 10);
                 if(targetTrack !== this.currentTrackNum) {
                     this.loadTrack(targetTrack);
-                    if(this.isPlaying) this.audio.play();
+                    if(this.isPlaying && !this.isMuted) this.audio.play().catch(e=>{});
                 }
             },
             
@@ -633,10 +646,15 @@
                 }
                 this.currentTrackNum = num;
                 this.audio = new Audio(`bgmusic/Track ${num}.mp3`);
-                this.audio.volume = 0.4;
+                this.audio.volume = this.volume;
                 this.audio.loop = true; 
             },
             
+            setVolume(val) {
+                this.volume = val;
+                if(this.audio) this.audio.volume = val;
+            },
+
             toggle() {
                 if(!this.audio) this.init();
                 
@@ -646,10 +664,18 @@
                     document.getElementById('btn-music').classList.remove('text-green-400');
                     document.getElementById('btn-music').classList.add('text-slate-400');
                 } else {
+                    this.audio.volume = this.volume;
                     this.audio.play().catch(e => console.log("Audio play failed:", e));
                     this.isPlaying = true;
                     document.getElementById('btn-music').classList.add('text-green-400');
                     document.getElementById('btn-music').classList.remove('text-slate-400');
+                }
+            },
+            
+            startPlayback() {
+                if(this.isPlaying && this.audio) {
+                    this.audio.play().catch(e=>{});
+                    document.getElementById('btn-music').classList.add('text-green-400');
                 }
             }
         };
@@ -745,6 +771,7 @@
             inH: document.getElementById('input-h'),
             inA: document.getElementById('input-a'),
             inGx: document.getElementById('input-gx'),
+            volSlider: document.getElementById('vol-slider'),
             
             lblH: document.getElementById('val-h'),
             lblA: document.getElementById('val-a'),
@@ -921,28 +948,24 @@
         function engageAbility() {
             if (state.selectedInv >= 0 && state.inventory[state.selectedInv]) {
                 const itemId = state.inventory[state.selectedInv];
-                // Consume
                 state.inventory.splice(state.selectedInv, 1);
                 state.selectedInv = -1;
                 
-                // Effect
-                if (itemId === 'repair') {
+                if (item === 'repair') {
                     state.hp = Math.min(state.maxHp, state.hp + 1);
                     showMsg("SYSTEM REPAIRED", CONFIG.SAFE_COLOR);
-                } else if (itemId === 'shield') {
-                    // Changed: Shield is 1 Round duration now for shop item? Or 10s?
-                    // Prompt said "10 seconds of the round".
+                } else if (item === 'shield') {
                     state.shieldTime = 10;
                     showMsg("OVERSHIELD ONLINE", CONFIG.SAFE_COLOR);
-                } else if (itemId === 'heatsink') {
+                } else if (item === 'heatsink') {
                     state.noHeatTime = 10;
                     state.missStreak = 0;
                     state.jamTime = 0;
                     showMsg("HEAT SINK ACTIVE", "yellow");
-                } else if (itemId === 'scavenger') {
-                    state.activeBuffs.scavenger = 5; // 5 Rounds
+                } else if (item === 'scavenger') {
+                    state.activeBuffs.scavenger = 5; 
                     showMsg("SCAVENGER PROTOCOL", "yellow");
-                } else if (itemId === 'turret') {
+                } else if (item === 'turret') {
                     state.activeBuffs.turret = 5;
                     showMsg("AUTO-TURRET ONLINE", "cyan");
                 }
@@ -983,8 +1006,9 @@
             startScreen.classList.add('hidden');
             state.active = true;
             resize();
+            MusicPlayer.init(); // Load Track 1
+            MusicPlayer.startPlayback(); // Attempt auto-play on user gesture
             startWaveCountdown();
-            MusicPlayer.init(); // Start Track 1
         }
 
         function updateUI() {
@@ -1228,10 +1252,10 @@
             let isSub = Math.random() > 0.6;
             let spawnX = (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random()*10);
             
-            // ACCELERATION LOGIC
-            // Start further out if elite
+            // ACCELERATION LOGIC: Spawn further out
             if(forceEliteType) spawnX *= 1.5;
-            
+            else spawnX *= 1.5; // All enemies start further for zoom effect
+
             let spawnY = isSub ? -Math.random()*12 - 2 : Math.random()*12 + 2; 
             
             let type = isSub ? 'mole' : 'drone';
@@ -1250,7 +1274,7 @@
                     type = 'megaboss';
                     name = "OBLIVION";
                     hp = 25; 
-                    speed = 0.3; // Base speed, will accelerate
+                    speed = 0.6; // Increased speed (was 0.3)
                     color = '#ef4444'; 
                     score = 5000;
                     sides = 12;
@@ -1282,7 +1306,7 @@
                 color: color,
                 sides: sides,
                 hasDodged: false,
-                phaseShiftTimer: 0 // New Prop
+                phaseShiftTimer: 0 
             });
         }
         
@@ -1328,7 +1352,7 @@
             if (state.weapon === 'grenade') {
                 state.params.gx = Math.max(-45, Math.min(45, mx));
             } else {
-                // VERTEX AIMING LOGIC
+                // VERTEX AIMING LOGIC (REVERTED TO CLASSIC)
                 const h = mx;
                 let k = my;
                 
@@ -1410,7 +1434,7 @@
                     pulse(count);
                 } else if (count === 0) {
                     if (state.wave % 15 === 0) {
-                        pulse("MEGA BOSS");
+                        pulse("BOSS DETECTED");
                         countdownText.style.color = "#ef4444"; 
                         ToneSynth.play('warning');
                     }
@@ -1653,15 +1677,26 @@
                     if (hit || e.dead) return;
                     let dx = p.x - e.x;
                     let dy = p.y - e.y;
-                    if (dx*dx + dy*dy < 4) {
-                        if(e.eliteName === 'PHANTOM' && !e.hasDodged) {
-                            let distSq = dx*dx + dy*dy;
-                            // Check distance for blink (approx 64 sq units = 8 units)
-                            // Wait, this block is inside < 4 check, which means HIT.
-                            // We need PRE-HIT check for blink.
+                    
+                    // Pre-Collision Check for Dodge (Blink)
+                    // We check radius and ensure projectile is moving toward entity
+                    let distSq = dx*dx + dy*dy;
+                    if (distSq < 100 && !e.hasDodged && (e.eliteName === 'PHANTOM' || e.isMegaBoss)) {
+                        // Dot Product Check: (p.dir * dx) > 0 means moving towards
+                        if ((p.dir > 0 && dx > 0) || (p.dir < 0 && dx < 0)) {
+                             e.hasDodged = true;
+                             // Setback calculation
+                             let pushDir = e.x > 0 ? 1 : -1;
+                             let setback = e.isMegaBoss ? 8 : 18; // Boss blinks less
+                             if(Math.abs(e.x) > 40) setback = 5; // Constrained near edge
+                             e.x += pushDir * setback;
+                             createParticles(e.x - (pushDir*setback), e.y, 'magenta'); 
+                             ToneSynth.play('warp');
+                             return; // Miss this frame
                         }
-                        // Moved Phantom blink check inside loop but outside hit check below
-                        
+                    }
+
+                    if (dx*dx + dy*dy < 4) { // Hit check
                         hit = true;
                         e.hp--;
                         ToneSynth.play('hit');
@@ -1725,21 +1760,6 @@
                         if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); 
                         updateUI();
                     }
-                    
-                    // PRE-HIT DODGE (RE-INSERTED CORRECTLY)
-                    let distSq = dx*dx + dy*dy;
-                    if (distSq < 64 && !e.hasDodged && (e.eliteName === 'PHANTOM' || e.isMegaBoss)) {
-                        if ((p.dir > 0 && dx > 0) || (p.dir < 0 && dx < 0)) {
-                             e.hasDodged = true;
-                             let pushDir = e.x > 0 ? 1 : -1;
-                             let setback = 25;
-                             if(Math.abs(e.x) > 40) setback = 5; // Constrained blink near edge
-                             e.x += pushDir * setback;
-                             createParticles(e.x - (pushDir*setback), e.y, 'magenta'); 
-                             ToneSynth.play('warp');
-                             return; 
-                        }
-                    }
                 });
                 
                 state.powerups.forEach((pup, idx) => {
@@ -1773,11 +1793,12 @@
                     continue;
                 }
                 
-                // APPROACH SPEED
+                // APPROACH SPEED LOGIC
                 let currentSpeed = e.speed;
                 let dist = Math.abs(e.x);
-                if (dist > 35) currentSpeed *= 3; // Fast approach
-                else if (dist > 20) currentSpeed *= 1.5;
+                if (dist > 55) currentSpeed *= 5; // Zoom in from far
+                else if (dist > 40) currentSpeed *= 2; // Decelerate
+                // Else normal speed
                 
                 if (dist < 15 && !e.homing) e.homing = true;
                 if (e.homing) {
@@ -1798,18 +1819,18 @@
                     }
                 }
                 
-                // PHASE SHIFT (OBLIVION)
+                // PHASE SHIFT (OBLIVION / PHANTOM)
                 if (e.isMegaBoss || e.eliteName === 'PHANTOM') {
-                    // Random chance to flip Y every second?
-                    // Use a timer
                     if(!e.phaseTimer) e.phaseTimer = 0;
                     e.phaseTimer += dt;
-                    if(e.phaseTimer > 3) { // Check every 3s
+                    // Random interval 4-6s
+                    let threshold = 4 + (Math.random() * 2);
+                    if(e.phaseTimer > threshold) {
                         e.phaseTimer = 0;
-                        if(Math.random() < 0.4) { // 40% chance to flip
+                        if(Math.random() < 0.4) { // 40% chance
                              e.y *= -1;
                              e.baseY *= -1;
-                             createParticles(e.x, e.y, 'cyan'); // Phase effect
+                             createParticles(e.x, e.y, 'cyan'); 
                              createParticles(e.x, -e.y, 'orange');
                              ToneSynth.play('warp');
                         }
@@ -2058,8 +2079,7 @@
                     ctx.lineWidth = 2;
                     ctx.stroke();
                 } else {
-                    // Standard Enemy (Smaller - Reduced Size)
-                    // Scale down radius from 16 to 10
+                    // Standard Enemy
                     if (e.type === 'mole') {
                         ctx.rotate(rotation * 2);
                         ctx.lineWidth = 2;
@@ -2176,6 +2196,7 @@
         UI.inH.addEventListener('input', syncParamsFromInput);
         UI.inA.addEventListener('input', syncParamsFromInput);
         UI.inGx.addEventListener('input', syncParamsFromInput);
+        UI.volSlider.addEventListener('input', (e) => MusicPlayer.setVolume(parseFloat(e.target.value)));
         
         UI.btnFire.addEventListener('click', fire);
         UI.btnFireLeft.addEventListener('click', fire);
