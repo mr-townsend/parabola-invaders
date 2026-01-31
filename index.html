@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Parabola Defense: Vector Siege</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            overflow: hidden;
+            background-color: #020617; /* Slate 950 */
+            touch-action: none;
+            user-select: none;
+            color: #e2e8f0;
+        }
+
+        /* Custom Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+            width: 100%;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 4px;
+            background: currentColor;
+            margin-top: -6px;
+            box-shadow: 0 0 10px currentColor;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        
+        input[type=range]:active::-webkit-slider-thumb {
+            transform: scale(1.2);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+
+        /* Mode Colors */
+        .theme-sky { color: #38bdf8; --glow: #0ea5e9; }
+        .theme-sub { color: #f97316; --glow: #ea580c; }
+        .theme-grenade { color: #ef4444; --glow: #dc2626; }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+        }
+
+        /* CRT Effects */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+        
+        .crt-vignette {
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%);
+            pointer-events: none;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: rgba(239, 68, 68, 0.2); }
+            50% { border-color: rgba(239, 68, 68, 0.8); }
+            100% { border-color: rgba(239, 68, 68, 0.2); }
+        }
+        
+        .damage-flash {
+            animation: pulse-border 0.5s infinite;
+        }
+
+        /* Countdown Animation */
+        @keyframes dramatic-scale {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1.0); opacity: 0; }
+        }
+        .countdown-text {
+            animation: dramatic-scale 0.8s ease-in-out forwards;
+        }
+        
+        /* Touch Indicator */
+        .touch-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .touch-indicator.active {
+            opacity: 0.8;
+        }
+
+        /* Jammed Effect */
+        .jammed-overlay {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(255, 0, 0, 0.05),
+                rgba(255, 0, 0, 0.05) 10px,
+                rgba(0, 0, 0, 0.1) 10px,
+                rgba(0, 0, 0, 0.1) 20px
+            );
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen overflow-hidden text-slate-200">
+
+    <!-- TOP HUD BAR -->
+    <div class="h-16 glass-panel flex items-center justify-between px-6 z-40 shadow-lg relative shrink-0">
+        <!-- Left: Stats -->
+        <div class="flex gap-6 items-center w-32">
+            <div class="flex flex-col leading-tight">
+                <span class="text-[10px] text-slate-500 font-bold tracking-widest">WAVE</span>
+                <span id="hud-wave" class="text-xl font-bold text-white">1</span>
+            </div>
+            <div class="flex flex-col leading-tight">
+                <span class="text-[10px] text-slate-500 font-bold tracking-widest">SCORE</span>
+                <span id="hud-score" class="text-xl font-bold text-white font-mono">0</span>
+            </div>
+        </div>
+
+        <!-- Center: Status Messages Area -->
+        <div class="absolute left-1/2 -translate-x-1/2 top-0 h-full flex flex-col justify-center items-center pointer-events-none w-1/3">
+             <div id="message-display" class="text-xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] tracking-widest transition-opacity duration-300 opacity-0 whitespace-nowrap">
+                SYSTEM READY
+            </div>
+            <div id="jam-warning" class="hidden text-xs bg-red-900/80 text-red-100 px-2 py-0.5 rounded border border-red-500 animate-pulse mt-1">
+                WEAPON JAMMED - COOLING
+            </div>
+        </div>
+
+        <!-- Right: Health & Heat -->
+        <div class="flex gap-6 items-center justify-end w-48">
+            <!-- Heat -->
+            <div class="flex flex-col items-end w-20">
+                <div class="flex justify-between w-full text-[10px] text-slate-500 font-bold mb-1">
+                    <span>HEAT</span>
+                    <span id="heat-text">0%</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="heat-bar" class="h-full bg-yellow-500 w-0 transition-all duration-200"></div>
+                </div>
+            </div>
+            <!-- HP -->
+            <div class="flex flex-col items-end relative">
+                <div class="text-[10px] text-slate-500 font-bold tracking-widest mb-1">INTEGRITY</div>
+                <div class="flex gap-1 relative" id="health-bar-container">
+                    <div class="flex gap-1" id="health-bar">
+                        <!-- Blocks injected by JS -->
+                    </div>
+                    <!-- Status Overlay -->
+                    <div id="shield-status" class="hidden absolute inset-0 bg-green-900/90 border border-green-500 flex items-center justify-center z-10 rounded-sm">
+                        <span class="text-[9px] text-green-300 font-black tracking-wider animate-pulse">SHIELD ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GAME AREA -->
+    <div class="relative flex-1 bg-slate-950 overflow-hidden" id="game-container">
+        <canvas id="gameCanvas" class="absolute inset-0 z-0 block cursor-crosshair"></canvas>
+        <div class="absolute inset-0 z-10 scanlines crt-vignette pointer-events-none"></div>
+        <div id="touch-cursor" class="touch-indicator"></div>
+        <div id="jam-overlay" class="absolute inset-0 z-10 jammed-overlay hidden"></div>
+        
+        <!-- Countdown Overlay -->
+        <div id="countdown-layer" class="absolute inset-0 z-30 flex items-center justify-center pointer-events-none hidden">
+            <h1 id="countdown-text" class="text-9xl font-black text-white drop-shadow-[0_0_20px_rgba(14,165,233,0.8)] tracking-tighter outline-text">3</h1>
+        </div>
+
+        <!-- Debug Tag -->
+        <div id="debug-tag" class="hidden absolute top-4 right-4 z-20 flex gap-2">
+             <div class="bg-blue-900/50 text-blue-400 border border-blue-500 text-[10px] px-2 py-1 rounded font-bold hidden" id="touch-tag">TOUCH AIM</div>
+             <div class="bg-red-900/50 text-red-400 border border-red-500 text-[10px] px-2 py-1 rounded font-bold animate-pulse">DEBUG MODE</div>
+        </div>
+    </div>
+
+    <!-- BOTTOM CONTROL DECK -->
+    <div class="h-auto min-h-[160px] glass-panel z-40 border-t border-slate-700 p-2 flex gap-2 items-center shrink-0">
+        
+        <!-- Left Controls (Fire + Laser) -->
+        <div class="h-full flex gap-2 w-40 shrink-0">
+            <button id="btn-fire-left" class="flex-1 bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white font-black text-sm md:text-xl tracking-widest rounded-lg shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1 group">
+                <span>FIRE</span>
+                <span class="text-[10px] opacity-50 font-normal hidden md:block">SPACEBAR</span>
+            </button>
+            <button id="btn-laser-left" class="w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group">
+                <div class="text-[10px] font-bold tracking-widest -rotate-90 whitespace-nowrap">LASER</div>
+                <div class="absolute bottom-1 right-1 w-4 h-4 bg-red-900 rounded-full flex items-center justify-center text-[8px] text-white border border-red-500 grenade-cnt">3</div>
+            </button>
+        </div>
+
+        <!-- Center: Sliders & Equation -->
+        <div class="h-full flex-1 flex flex-col justify-between gap-2 px-2 md:px-4 border-x border-slate-700/50 bg-slate-900/30 rounded-lg py-2 relative" id="controls-area">
+            
+            <!-- Equation Display -->
+            <div class="text-center font-mono text-xs md:text-sm text-slate-400 bg-black/40 rounded py-1 px-4 border border-white/5 mx-auto w-fit min-w-[240px] shadow-sm">
+                <span id="equation-display">y = a(x - h)² + k</span>
+            </div>
+
+            <!-- Sliders Container -->
+            <div class="relative w-full flex-1 flex items-center"> 
+                <!-- Parabola Context -->
+                <div id="controls-parabola" class="grid grid-cols-2 gap-4 md:gap-8 w-full">
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1 font-bold tracking-wider">
+                            <span class="text-purple-400">OFFSET (h)</span>
+                            <span id="val-h" class="font-mono text-white">15.0</span>
+                        </div>
+                        <input type="range" id="input-h" min="-45" max="45" step="0.5" value="15" class="theme-sky h-4">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] mb-1 font-bold tracking-wider">
+                            <span class="text-cyan-400">STEEP (a)</span>
+                            <span id="val-a" class="font-mono text-white">0.05</span>
+                        </div>
+                        <input type="range" id="input-a" min="0.01" max="0.30" step="0.005" value="0.05" class="theme-sky h-4">
+                    </div>
+                </div>
+
+                <!-- Grenade Context -->
+                <div id="controls-grenade" class="hidden w-full flex-col justify-center">
+                    <div class="flex justify-between text-[10px] mb-1 font-bold tracking-wider">
+                        <span class="text-red-400">TARGET X COORDINATE</span>
+                        <span id="val-gx" class="font-mono text-white">15</span>
+                    </div>
+                    <input type="range" id="input-gx" min="-45" max="45" step="1" value="15" class="theme-grenade h-4">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Controls (Laser + Fire) -->
+        <div class="h-full flex gap-2 w-40 shrink-0">
+            <button id="btn-laser-right" class="w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group">
+                <div class="text-[10px] font-bold tracking-widest -rotate-90 whitespace-nowrap">LASER</div>
+                <div class="absolute bottom-1 left-1 w-4 h-4 bg-red-900 rounded-full flex items-center justify-center text-[8px] text-white border border-red-500 grenade-cnt">3</div>
+            </button>
+            <button id="btn-fire" class="flex-1 bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white font-black text-sm md:text-xl tracking-widest rounded-lg shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1">
+                <span>FIRE</span>
+                <span class="text-[10px] opacity-50 font-normal hidden md:block">CLICK</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREENS & OVERLAYS -->
+
+    <!-- Start / Splash Screen -->
+    <div id="start-screen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div class="max-w-2xl w-full bg-slate-900 border border-slate-700 rounded-xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute inset-0 scanlines opacity-50 pointer-events-none"></div>
+            
+            <h1 class="text-4xl md:text-5xl font-black text-center mb-2 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">
+                VECTOR SIEGE
+            </h1>
+            <p class="text-center text-slate-400 mb-8 text-sm tracking-widest uppercase">Parabolic Defense Initiative</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 relative z-10">
+                <!-- Controls -->
+                <div>
+                    <h3 class="text-sm font-bold text-white border-b border-slate-700 pb-2 mb-3">MISSION PROTOCOLS</h3>
+                    <ul class="space-y-3 text-xs text-slate-300">
+                        <li class="flex items-start gap-2">
+                            <span class="bg-slate-800 p-1 rounded border border-slate-600 font-mono text-cyan-400">AIM</span>
+                            <span>Touch/Drag field or use sliders. <span class="text-purple-400">h</span>=Dist <span class="text-cyan-400">a</span>=Steep.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="bg-slate-800 p-1 rounded border border-slate-600 font-mono text-orange-400">MODE</span>
+                            <span>Tap with <b>2 FINGERS</b> to swap <span class="text-sky-400">SKY</span> / <span class="text-orange-400">SUB</span>.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="bg-slate-800 p-1 rounded border border-slate-600 font-mono text-red-400">FIRE</span>
+                            <span>Tap FIRE buttons. Use LASER for emergency vertical clear.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Dynamic Intel -->
+                <div>
+                    <h3 class="text-sm font-bold text-white border-b border-slate-700 pb-2 mb-3">INTEL DATABASE</h3>
+                    <div id="intel-list" class="space-y-2 text-xs">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-start-game" class="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold tracking-[0.2em] rounded shadow-lg shadow-sky-900/50 transition-all border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 text-lg relative z-10">
+                INITIATE DEFENSE
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-700 p-8 rounded-xl shadow-2xl max-w-md w-full text-center">
+            <h2 class="text-4xl font-black text-red-500 mb-2 tracking-widest">MISSION FAILED</h2>
+            <div class="h-px w-full bg-slate-700 my-4"></div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-slate-800 p-4 rounded border border-slate-700">
+                    <div class="text-xs text-slate-500 mb-1">FINAL SCORE</div>
+                    <div class="text-2xl font-bold text-white" id="go-score">0</div>
+                </div>
+                <div class="bg-slate-800 p-4 rounded border border-slate-700">
+                    <div class="text-xs text-slate-500 mb-1">SESSION BEST</div>
+                    <div class="text-2xl font-bold text-yellow-400" id="go-high">0</div>
+                </div>
+            </div>
+
+            <button id="btn-restart" class="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold tracking-widest rounded shadow-lg shadow-red-900/50 transition-all active:scale-95 border-b-4 border-red-800 active:border-b-0 active:translate-y-1">
+                REBOOT SYSTEM
+            </button>
+        </div>
+    </div>
+
+    <!-- DEBUG OVERLAY -->
+    <div id="debug-menu" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-700 p-8 rounded-lg w-96 shadow-2xl">
+            <h2 class="text-lg font-bold text-white mb-6 border-b border-slate-700 pb-2">DEBUG CONSOLE</h2>
+            <div class="space-y-4">
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-slate-400 group-hover:text-white transition">God Mode</span>
+                    <input type="checkbox" id="dbg-god" class="accent-sky-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-slate-400 group-hover:text-white transition">Show Hitboxes</span>
+                    <input type="checkbox" id="dbg-hit" class="accent-sky-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-slate-400 group-hover:text-white transition">Snap-to-Side (F Key)</span>
+                    <input type="checkbox" id="dbg-snap" class="accent-sky-500">
+                </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-slate-400 group-hover:text-white transition">Touch/Mouse Aim</span>
+                    <input type="checkbox" id="dbg-touch" class="accent-sky-500">
+                </label>
+                <div class="pt-2">
+                    <div class="flex justify-between text-xs text-slate-500 mb-1">TIMESCALE</div>
+                    <input type="range" id="dbg-time" min="0.1" max="2.0" step="0.1" value="1.0" class="w-full accent-purple-500">
+                </div>
+            </div>
+            <button onclick="Debugger.toggle()" class="mt-8 w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded">CLOSE (SHIFT+D)</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * PARABOLA DEFENSE: VECTOR SIEGE
+         * Engine v3.3 - Elite Enemies & Boss Logic
+         */
+
+        const CONFIG = {
+            SCALE: 18,        
+            MAX_HP: 3,
+            WAVE_COOLDOWN: 100, 
+            SKY_COLOR: '#0ea5e9',
+            SUB_COLOR: '#f97316',
+            ELITE_COLOR: '#a855f7', // Purple
+            ERR_COLOR: '#ef4444',
+            SAFE_COLOR: '#22c55e',
+            LASER_DURATION: 2.0,
+            JAM_THRESHOLD: 8, 
+            JAM_DURATION: 5.0,
+            ELITE_HP: 5,
+            ELITE_DMG: 2
+        };
+
+        const GAME_INTEL = {
+            enemies: [
+                { name: "AERO DRONE", color: CONFIG.SKY_COLOR, desc: "Standard aerial unit. Weak to Sky shots." },
+                { name: "TERRA MOLE", color: CONFIG.SUB_COLOR, desc: "Subterranean digger. Weak to Sub shots." },
+                { name: "ELITE INTERCEPTOR", color: CONFIG.ELITE_COLOR, desc: "Heavily armored. Causes instant JAM on impact." }
+            ],
+            powerups: [
+                { name: "REPAIR MOD", color: "#ef4444", desc: "Restores Hull. Spawns when damaged." },
+                { name: "SHIELD MATRIX", color: "#22c55e", desc: "Rare drop. Halves incoming damage." }
+            ]
+        };
+
+        // --- AUDIO SYSTEM ---
+        const ToneSynth = {
+            ctx: null,
+            init() {
+                if(!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+            },
+            play(type) {
+                if(!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                const t = this.ctx.currentTime;
+
+                if (type === 'count') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, t);
+                    osc.frequency.exponentialRampToValueAtTime(800, t + 0.05);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                    osc.start(t);
+                    osc.stop(t + 0.1);
+                } else if (type === 'start') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, t);
+                    osc.frequency.linearRampToValueAtTime(800, t + 0.4);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.6);
+                    osc.start(t);
+                    osc.stop(t + 0.6);
+                } else if (type === 'shoot') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, t);
+                    osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                    osc.start(t);
+                    osc.stop(t + 0.15);
+                } else if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, t);
+                    osc.frequency.exponentialRampToValueAtTime(10, t + 0.2);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                    osc.start(t);
+                    osc.stop(t + 0.2);
+                } else if (type === 'powerup') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, t);
+                    osc.frequency.setValueAtTime(1800, t + 0.1);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.4);
+                    osc.start(t);
+                    osc.stop(t + 0.4);
+                } else if (type === 'warning') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, t);
+                    osc.frequency.linearRampToValueAtTime(100, t + 0.3);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.3);
+                    osc.start(t);
+                    osc.stop(t + 0.3);
+                } else if (type === 'jam') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(80, t);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                    osc.start(t);
+                    osc.stop(t + 0.1);
+                }
+            }
+        };
+
+        // --- GAME STATE ---
+        const state = {
+            hp: CONFIG.MAX_HP,
+            wave: 1,
+            score: 0,
+            highScore: 0,
+            grenades: 3, 
+            mode: 'sky', 
+            weapon: 'parabola', 
+            shieldTime: 0,
+            jamTime: 0,
+            missStreak: 0, 
+            params: { h: 15, a: 0.05, gx: 15 },
+            projectiles: [],
+            enemies: [],
+            powerups: [],
+            particles: [],
+            lastTime: 0,
+            timeScale: 1.0,
+            shake: 0,
+            active: false,
+            waveActive: false,
+            countingDown: false
+        };
+
+        const Debugger = {
+            open: false,
+            god: false,
+            hitbox: false,
+            snap: false,
+            touchAim: true, // Default ON
+            toggle() {
+                this.open = !this.open;
+                document.getElementById('debug-menu').classList.toggle('hidden', !this.open);
+                document.getElementById('debug-tag').classList.toggle('hidden', !this.open && !this.god && !this.snap && !this.touchAim);
+            }
+        };
+
+        // --- DOM REFERENCES ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const startScreen = document.getElementById('start-screen');
+        const countdownLayer = document.getElementById('countdown-layer');
+        const countdownText = document.getElementById('countdown-text');
+        
+        let cw, ch, ox, oy;
+
+        function resize() {
+            const container = document.getElementById('game-container');
+            cw = canvas.width = container.clientWidth;
+            ch = canvas.height = container.clientHeight;
+            ox = cw / 2;
+            oy = ch / 2;
+        }
+        window.addEventListener('resize', resize);
+        setTimeout(resize, 100);
+
+        // Coordinate Transforms
+        const toPxX = (x) => ox + x * CONFIG.SCALE;
+        const toPxY = (y) => oy - y * CONFIG.SCALE;
+        const toMathX = (px) => (px - ox) / CONFIG.SCALE;
+        const toMathY = (py) => (oy - py) / CONFIG.SCALE; 
+
+        // --- UI ---
+        const UI = {
+            inH: document.getElementById('input-h'),
+            inA: document.getElementById('input-a'),
+            inGx: document.getElementById('input-gx'),
+            
+            lblH: document.getElementById('val-h'),
+            lblA: document.getElementById('val-a'),
+            lblGx: document.getElementById('val-gx'),
+            
+            btnFire: document.getElementById('btn-fire'),
+            btnFireLeft: document.getElementById('btn-fire-left'),
+            btnLaserLeft: document.getElementById('btn-laser-left'),
+            btnLaserRight: document.getElementById('btn-laser-right'),
+            grenadeCnts: document.querySelectorAll('.grenade-cnt'),
+            
+            hpBar: document.getElementById('health-bar'),
+            shieldStatus: document.getElementById('shield-status'),
+            
+            ctrlParabola: document.getElementById('controls-parabola'),
+            ctrlGrenade: document.getElementById('controls-grenade'),
+            eqDisplay: document.getElementById('equation-display'),
+            
+            msg: document.getElementById('message-display'),
+            score: document.getElementById('hud-score'),
+            wave: document.getElementById('hud-wave'),
+            heatBar: document.getElementById('heat-bar'),
+            heatText: document.getElementById('heat-text'),
+            jamOverlay: document.getElementById('jam-overlay'),
+            jamWarning: document.getElementById('jam-warning'),
+            
+            goScore: document.getElementById('go-score'),
+            goHigh: document.getElementById('go-high'),
+            btnRestart: document.getElementById('btn-restart'),
+            btnStart: document.getElementById('btn-start-game'),
+            
+            touchTag: document.getElementById('touch-tag')
+        };
+
+        // --- INIT INTEL SCREEN ---
+        function initStartScreen() {
+            const list = document.getElementById('intel-list');
+            list.innerHTML = '';
+            
+            [...GAME_INTEL.enemies, ...GAME_INTEL.powerups].forEach(item => {
+                const row = document.createElement('div');
+                row.className = "flex items-center gap-3 p-2 bg-slate-800/50 rounded border border-slate-700/50";
+                
+                const dot = document.createElement('div');
+                dot.className = "w-3 h-3 rounded-full shadow-[0_0_5px]";
+                dot.style.backgroundColor = item.color;
+                dot.style.boxShadow = `0 0 8px ${item.color}`;
+                
+                const txt = document.createElement('div');
+                txt.innerHTML = `<div class="font-bold text-slate-200">${item.name}</div><div class="text-slate-500">${item.desc}</div>`;
+                
+                row.appendChild(dot);
+                row.appendChild(txt);
+                list.appendChild(row);
+            });
+            
+            document.getElementById('dbg-touch').checked = Debugger.touchAim;
+        }
+
+        function startGame() {
+            ToneSynth.init();
+            startScreen.classList.add('hidden');
+            state.active = true;
+            resize();
+            startWaveCountdown();
+        }
+
+        function updateUI() {
+            // Update labels
+            UI.lblH.innerText = state.params.h.toFixed(1);
+            UI.lblA.innerText = state.params.a.toFixed(3);
+            UI.lblGx.innerText = state.params.gx.toFixed(0);
+
+            // Sync Slider Values
+            if(document.activeElement !== UI.inH) UI.inH.value = state.params.h;
+            if(document.activeElement !== UI.inA) UI.inA.value = state.params.a;
+            if(document.activeElement !== UI.inGx) UI.inGx.value = state.params.gx;
+
+            // Equation Update
+            const { a, h, k } = calculateTrajectory();
+            const signH = h >= 0 ? '-' : '+';
+            const valH = Math.abs(h).toFixed(1);
+            const signK = k >= 0 ? '+' : '';
+            const valK = k.toFixed(1);
+            UI.eqDisplay.innerHTML = `y = ${a.toFixed(2)}(x ${signH} ${valH})² ${signK}${valK}`;
+
+            // Mode Styles
+            const isSky = state.mode === 'sky';
+            const isGrenade = state.weapon === 'grenade';
+
+            const theme = isGrenade ? 'theme-grenade' : (isSky ? 'theme-sky' : 'theme-sub');
+            UI.inH.className = theme + ' h-4';
+            UI.inA.className = theme + ' h-4';
+            UI.inGx.className = theme + ' h-4';
+            
+            // Context Visibility
+            const fireBtnClass = "flex-1 font-black text-sm md:text-xl tracking-widest rounded-lg transition-all border-b-4 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1";
+            
+            if (isGrenade) {
+                UI.ctrlParabola.classList.add('hidden');
+                UI.ctrlGrenade.classList.remove('hidden');
+                UI.ctrlGrenade.classList.add('flex');
+                
+                const style = `${fireBtnClass} bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] border-red-800`;
+                UI.btnFire.className = style;
+                UI.btnFireLeft.className = style;
+                UI.btnFire.querySelector('span').innerText = "DEPLOY";
+                UI.btnFireLeft.querySelector('span').innerText = "DEPLOY";
+                
+                // Lasers active state
+                const laserStyle = "w-12 bg-red-900 border border-red-500 text-white rounded-lg flex flex-col items-center justify-center gap-1 shadow-inner relative overflow-hidden ring-2 ring-red-400";
+                UI.btnLaserLeft.className = laserStyle;
+                UI.btnLaserRight.className = laserStyle;
+            } else {
+                UI.ctrlParabola.classList.remove('hidden');
+                UI.ctrlGrenade.classList.add('hidden');
+                UI.ctrlGrenade.classList.remove('flex');
+                
+                // Lasers inactive state
+                const laserStyle = "w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group";
+                UI.btnLaserLeft.className = laserStyle;
+                UI.btnLaserRight.className = laserStyle;
+
+                if (state.jamTime > 0) {
+                     const jamStyle = "flex-1 bg-red-900/50 text-red-500 cursor-not-allowed font-black text-sm md:text-xl tracking-widest rounded-lg border border-red-900 flex flex-col items-center justify-center gap-1";
+                     UI.btnFire.className = jamStyle;
+                     UI.btnFireLeft.className = jamStyle;
+                     UI.btnFire.querySelector('span').innerText = "JAMMED";
+                     UI.btnFireLeft.querySelector('span').innerText = "JAMMED";
+                } else if (isSky) {
+                    const skyStyle = `${fireBtnClass} bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white shadow-[0_0_20px_rgba(14,165,233,0.4)] border-sky-800`;
+                    UI.btnFire.className = skyStyle;
+                    UI.btnFireLeft.className = skyStyle;
+                    UI.btnFire.querySelector('span').innerText = "FIRE";
+                    UI.btnFireLeft.querySelector('span').innerText = "FIRE";
+                } else {
+                    const subStyle = `${fireBtnClass} bg-orange-600 hover:bg-orange-500 active:bg-orange-400 text-white shadow-[0_0_20px_rgba(249,115,22,0.4)] border-orange-800`;
+                    UI.btnFire.className = subStyle;
+                    UI.btnFireLeft.className = subStyle;
+                    UI.btnFire.querySelector('span').innerText = "FIRE";
+                    UI.btnFireLeft.querySelector('span').innerText = "FIRE";
+                }
+            }
+
+            UI.grenadeCnts.forEach(el => el.innerText = state.grenades);
+            UI.score.innerText = state.score;
+            UI.wave.innerText = state.wave;
+            
+            // HP Render
+            UI.hpBar.innerHTML = '';
+            let blocks = Math.ceil(state.hp);
+            for(let i=0; i<3; i++) {
+                const isActive = i < blocks;
+                const d = document.createElement('div');
+                let colorClass = 'bg-slate-800 border border-slate-700';
+                if (isActive) {
+                     if (state.shieldTime > 0) colorClass = 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]';
+                     else if (state.hp <= 1) colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse';
+                     else colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]';
+                }
+                d.className = `w-3 h-6 rounded-sm transition-all duration-300 ${colorClass}`;
+                UI.hpBar.appendChild(d);
+            }
+            
+            // Shield & Jam UI
+            UI.shieldStatus.classList.toggle('hidden', state.shieldTime <= 0);
+            UI.jamOverlay.classList.toggle('hidden', state.jamTime <= 0);
+            UI.jamWarning.classList.toggle('hidden', state.jamTime <= 0);
+            
+            // Heat Meter
+            let heatPct = Math.min(100, (state.missStreak / CONFIG.JAM_THRESHOLD) * 100);
+            if(state.jamTime > 0) heatPct = 100;
+            UI.heatBar.style.width = `${heatPct}%`;
+            UI.heatBar.className = `h-full transition-all duration-200 ${heatPct > 70 ? 'bg-red-500' : (heatPct > 40 ? 'bg-yellow-500' : 'bg-slate-500')}`;
+            UI.heatText.innerText = Math.floor(heatPct) + "%";
+
+            UI.touchTag.classList.toggle('hidden', !Debugger.touchAim);
+        }
+        
+        function syncParamsFromInput() {
+             state.params.h = parseFloat(UI.inH.value);
+             state.params.a = parseFloat(UI.inA.value);
+             state.params.gx = parseFloat(UI.inGx.value);
+             updateUI();
+        }
+
+        function setMode(m) {
+            ToneSynth.init();
+            state.mode = m;
+            state.weapon = 'parabola';
+            updateUI();
+        }
+
+        function toggleGrenade() {
+            ToneSynth.init();
+            if(state.weapon === 'grenade') state.weapon = 'parabola';
+            else if (state.grenades > 0) state.weapon = 'grenade';
+            else showMsg("NO CHARGE", CONFIG.ERR_COLOR);
+            updateUI();
+        }
+
+        function showMsg(txt, col) {
+            UI.msg.innerHTML = txt;
+            UI.msg.style.color = col || 'white';
+            UI.msg.style.opacity = 1;
+            setTimeout(() => UI.msg.style.opacity = 0, 1500);
+        }
+
+        // --- LOGIC ---
+
+        function calculateTrajectory() {
+            let { h, a } = state.params;
+            let finalA = state.mode === 'sky' ? -a : a;
+            let k = -finalA * (h * h); 
+            return { a: finalA, h, k };
+        }
+
+        function fire() {
+            ToneSynth.init(); 
+            if (!state.active || state.countingDown) return;
+
+            if (state.weapon === 'grenade') {
+                if (state.grenades > 0) {
+                    state.grenades--;
+                    state.projectiles.push({
+                        type: 'laser',
+                        x: state.params.gx,
+                        mode: state.mode,
+                        life: CONFIG.LASER_DURATION,
+                        width: 2 
+                    });
+                    ToneSynth.play('shoot');
+                    toggleGrenade();
+                }
+                return;
+            }
+
+            const { a, h, k } = calculateTrajectory();
+            
+            if (Math.abs(h) < 2) {
+                showMsg("RANGE TOO SHORT", CONFIG.ERR_COLOR);
+                return; 
+            }
+            
+            let unstable = false;
+            if (state.jamTime > 0) {
+                unstable = true;
+                ToneSynth.play('jam');
+            } else {
+                state.missStreak += 1;
+                if (state.missStreak >= CONFIG.JAM_THRESHOLD) {
+                    state.jamTime = CONFIG.JAM_DURATION;
+                    showMsg("WEAPON JAMMED!", CONFIG.ERR_COLOR);
+                    ToneSynth.play('warning');
+                    unstable = true;
+                }
+            }
+
+            if(!unstable) ToneSynth.play('shoot');
+
+            state.projectiles.push({
+                type: 'ball',
+                mode: state.mode,
+                config: { a, h, k },
+                x: 0,
+                y: 0,
+                dir: h > 0 ? 1 : -1,
+                trail: [],
+                unstable: unstable,
+                distanceTraveled: 0
+            });
+            updateUI();
+        }
+
+        function takeDamage(dmgAmount) {
+            if(Debugger.god) return;
+            ToneSynth.play('warning');
+            
+            let dmg = state.shieldTime > 0 ? (dmgAmount * 0.5) : dmgAmount;
+            state.hp -= dmg;
+            
+            state.shake = 20;
+            document.getElementById('game-container').classList.add('damage-flash');
+            setTimeout(() => document.getElementById('game-container').classList.remove('damage-flash'), 500);
+            updateUI();
+            if(state.hp <= 0) gameOver();
+        }
+
+        function spawnEnemy(isElite) {
+            if(!state.waveActive) return;
+            
+            const speedBase = 1 + (state.wave * 0.2);
+            const isSub = Math.random() > 0.6;
+            let spawnX = (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random()*10);
+            
+            // ELITE PROPERTIES
+            let type = isSub ? 'mole' : 'drone';
+            let hp = 1;
+            let speed = speedBase * (Math.random() + 0.5);
+            
+            if (isElite) {
+                type = 'elite';
+                hp = CONFIG.ELITE_HP;
+                speed *= 0.8; // Elites are slower/heavier
+            }
+
+            state.enemies.push({
+                x: spawnX,
+                y: isSub ? -Math.random()*15 - 2 : Math.random()*15 + 2,
+                type: type,
+                speed: speed,
+                homing: false,
+                dead: false,
+                hp: hp,
+                maxHp: hp,
+                isElite: !!isElite
+            });
+        }
+        
+        function spawnPowerup() {
+            if(!state.active || state.countingDown) return;
+            
+            let type = 'hp';
+            if (state.hp < CONFIG.MAX_HP) {
+                if (Math.random() > 0.7) type = 'shield'; 
+            } else {
+                if (Math.random() > 0.3) return; 
+                type = 'shield';
+            }
+
+            let spawnX = (Math.random() > 0.5 ? 1 : -1) * 60; 
+            let safeY = (Math.random() * 10) + 5; 
+            if (Math.random() > 0.5) safeY *= -1;
+
+            state.powerups.push({
+                type: type,
+                x: spawnX,
+                y: safeY,
+                vx: (spawnX > 0 ? -1 : 1) * 5, 
+                dead: false
+            });
+        }
+
+        // --- POINTER ---
+        function handlePointer(e) {
+            if (!Debugger.touchAim || !state.active) return;
+            const rect = canvas.getBoundingClientRect();
+            const px = e.clientX - rect.left;
+            const py = e.clientY - rect.top;
+            const mx = toMathX(px);
+            const my = toMathY(py);
+            
+            const cursor = document.getElementById('touch-cursor');
+            cursor.style.left = px + 'px';
+            cursor.style.top = py + 'px';
+            cursor.classList.add('active');
+            
+            if (state.weapon === 'grenade') {
+                state.params.gx = Math.max(-45, Math.min(45, mx));
+            } else {
+                const safeX = Math.abs(mx) < 0.5 ? 0.5 : mx;
+                let calculatedA = -my / (safeX * safeX);
+                let magA = Math.abs(calculatedA);
+                magA = Math.max(0.01, Math.min(0.30, magA));
+                state.params.h = Math.max(-45, Math.min(45, mx));
+                state.params.a = magA;
+            }
+            updateUI();
+        }
+
+        // TWO FINGER TOGGLE
+        canvas.addEventListener('touchstart', (e) => {
+            if(e.touches.length === 2 && state.active) {
+                e.preventDefault();
+                setMode(state.mode === 'sky' ? 'sub' : 'sky');
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('contextmenu', e => {
+            if(Debugger.touchAim) {
+                e.preventDefault();
+                setMode(state.mode === 'sky' ? 'sub' : 'sky');
+            }
+        });
+
+        canvas.addEventListener('pointerup', e => {
+            if(Debugger.touchAim && e.button === 0) {
+                document.getElementById('touch-cursor').classList.remove('active');
+                fire();
+            }
+        });
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if(!Debugger.touchAim) return;
+            handlePointer(e);
+        });
+        
+        canvas.addEventListener('pointermove', handlePointer);
+
+        // --- GAME LOOP ---
+
+        function startWaveCountdown() {
+            state.countingDown = true;
+            countdownLayer.classList.remove('hidden');
+            let count = 3;
+            
+            const pulse = (text) => {
+                countdownText.innerText = text;
+                countdownText.classList.remove('countdown-text');
+                void countdownText.offsetWidth; 
+                countdownText.classList.add('countdown-text');
+                ToneSynth.play('count'); 
+            };
+
+            pulse(count);
+
+            const interval = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    pulse(count);
+                } else if (count === 0) {
+                    pulse("ENGAGE");
+                    countdownText.style.color = CONFIG.SAFE_COLOR;
+                    ToneSynth.play('start');
+                } else {
+                    clearInterval(interval);
+                    countdownLayer.classList.add('hidden');
+                    countdownText.style.color = "white"; 
+                    state.countingDown = false;
+                    state.waveActive = true;
+                    spawnWaveBatch();
+                }
+            }, 800);
+        }
+
+        function spawnWaveBatch() {
+            if(state.wave % 5 === 0) {
+                state.grenades = Math.min(5, state.grenades + 2);
+                showMsg("AMMO RELOAD", CONFIG.SAFE_COLOR);
+            }
+            updateUI();
+            
+            let count = 3 + state.wave;
+            for(let i=0; i<count; i++) {
+                // Elite Check: Wave 5, 10, etc.
+                // 50% chance for ANY enemy to be Elite on these waves
+                let isElite = (state.wave % 5 === 0) && (Math.random() < 0.5);
+                setTimeout(() => spawnEnemy(isElite), i * 800);
+            }
+        }
+
+        function gameOver() {
+            state.active = false;
+            state.highScore = Math.max(state.highScore, state.score);
+            UI.goScore.innerText = state.score;
+            UI.goHigh.innerText = state.highScore;
+            gameOverScreen.classList.remove('hidden');
+            document.getElementById('game-container').style.filter = "grayscale(100%) blur(5px)";
+        }
+
+        function restartGame() {
+            ToneSynth.init();
+            state.hp = CONFIG.MAX_HP;
+            state.score = 0;
+            state.wave = 1;
+            state.grenades = 3;
+            state.shieldTime = 0;
+            state.jamTime = 0;
+            state.missStreak = 0;
+            state.projectiles = [];
+            state.enemies = [];
+            state.particles = [];
+            state.powerups = [];
+            
+            state.active = true;
+            state.waveActive = false;
+            
+            gameOverScreen.classList.add('hidden');
+            document.getElementById('game-container').style.filter = "none";
+            
+            updateUI();
+            startWaveCountdown();
+        }
+
+        function update(dt) {
+            if(!state.active) return;
+            dt *= state.timeScale;
+
+            if (state.shieldTime > 0) {
+                state.shieldTime -= dt;
+                if (state.shieldTime <= 0) updateUI();
+            }
+            if (state.jamTime > 0) {
+                state.jamTime -= dt;
+                if (state.jamTime <= 0) {
+                    state.missStreak = 0; 
+                    showMsg("SYSTEM COOLED", "cyan");
+                    updateUI();
+                }
+            }
+
+            if (state.enemies.length === 0 && state.waveActive && !state.countingDown) {
+                state.waveActive = false;
+                setTimeout(() => {
+                    state.wave++;
+                    updateUI();
+                    startWaveCountdown();
+                }, 1000);
+            }
+            
+            if (state.active && !state.countingDown && Math.random() < 0.0005) { 
+                spawnPowerup();
+            }
+
+            for (let i = state.powerups.length - 1; i >= 0; i--) {
+                let pup = state.powerups[i];
+                pup.x += pup.vx * dt;
+                pup.y += Math.sin(Date.now()/500) * 0.02;
+                if (Math.abs(pup.x) > 70) state.powerups.splice(i, 1);
+            }
+
+            for (let i = state.projectiles.length - 1; i >= 0; i--) {
+                let p = state.projectiles[i];
+                
+                if (p.unstable) {
+                    p.distanceTraveled += Math.abs(p.dir * 25 * dt);
+                    if (p.distanceTraveled > 5 + Math.random() * 10) {
+                        createParticles(p.x, p.y, 'yellow');
+                        ToneSynth.play('hit');
+                        state.projectiles.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                if (p.type === 'laser') {
+                    p.life -= dt;
+                    if(p.life <= 0) {
+                        state.projectiles.splice(i, 1);
+                        continue;
+                    }
+                    state.enemies.forEach(e => {
+                        if (Math.abs(e.x - p.x) < p.width) {
+                            if ((p.mode === 'sky' && e.y > 0) || (p.mode === 'sub' && e.y < 0)) {
+                                e.hp -= 5 * dt; // Laser does continuous damage
+                                if (e.hp <= 0) {
+                                    e.dead = true;
+                                    createParticles(e.x, e.y, e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR));
+                                    ToneSynth.play('hit');
+                                    state.score += e.isElite ? 500 : 20;
+                                }
+                            }
+                        }
+                    });
+                    continue;
+                }
+
+                p.x += p.dir * 25 * dt; 
+                p.y = p.config.a * Math.pow(p.x - p.config.h, 2) + p.config.k;
+                
+                if (Math.random() > 0.5) p.trail.push({x:p.x, y:p.y, life:0.5});
+
+                if ((p.mode === 'sky' && p.y < -0.5) || (p.mode === 'sub' && p.y > 0.5)) {
+                    createParticles(p.x, 0, p.mode === 'sky' ? CONFIG.SKY_COLOR : CONFIG.SUB_COLOR);
+                    state.projectiles.splice(i, 1);
+                    continue;
+                }
+                if (Math.abs(p.x) > 60) state.projectiles.splice(i, 1);
+
+                let hit = false;
+                
+                state.enemies.forEach(e => {
+                    if (hit || e.dead) return;
+                    let dx = p.x - e.x;
+                    let dy = p.y - e.y;
+                    if (dx*dx + dy*dy < 4) { 
+                        hit = true;
+                        e.hp--;
+                        ToneSynth.play('hit');
+                        
+                        if(e.hp <= 0) {
+                            e.dead = true;
+                            createParticles(e.x, e.y, e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR));
+                            state.score += e.isElite ? 500 : 100;
+                        } else {
+                            // Hit effect for elite
+                            createParticles(e.x, e.y, 'white');
+                        }
+                        
+                        state.missStreak = Math.max(0, state.missStreak - 2); 
+                        updateUI();
+                    }
+                });
+                
+                state.powerups.forEach((pup, idx) => {
+                    if (hit) return;
+                    let dx = p.x - pup.x;
+                    let dy = p.y - pup.y;
+                    if (dx*dx + dy*dy < 9) { 
+                        hit = true;
+                        state.powerups.splice(idx, 1);
+                        createParticles(pup.x, pup.y, 'white');
+                        ToneSynth.play('powerup');
+                        state.missStreak = Math.max(0, state.missStreak - 2); 
+                        if (pup.type === 'hp') {
+                            state.hp = Math.min(CONFIG.MAX_HP, state.hp + 1);
+                            showMsg("HP RESTORED", CONFIG.SAFE_COLOR);
+                        } else if (pup.type === 'shield') {
+                            state.shieldTime = 10; 
+                            showMsg("SHIELD ACTIVE", CONFIG.SAFE_COLOR);
+                        }
+                        updateUI();
+                    }
+                });
+
+                if (hit) state.projectiles.splice(i, 1);
+            }
+
+            for (let i = state.enemies.length - 1; i >= 0; i--) {
+                let e = state.enemies[i];
+                if (e.dead) {
+                    state.enemies.splice(i, 1);
+                    continue;
+                }
+                if (Math.abs(e.x) < 15 && !e.homing) e.homing = true;
+                if (e.homing) {
+                    let angle = Math.atan2(0 - e.y, 0 - e.x);
+                    e.x += Math.cos(angle) * e.speed * dt;
+                    e.y += Math.sin(angle) * e.speed * dt;
+                } else {
+                    e.x += (e.x > 0 ? -1 : 1) * e.speed * dt;
+                    e.y += Math.sin(Date.now()/500 + i) * 0.05;
+                }
+                if (Math.abs(e.x) < 2 && Math.abs(e.y) < 2) {
+                    // Elite Collision Logic
+                    let dmg = 1;
+                    if(e.isElite) {
+                        dmg = CONFIG.ELITE_DMG;
+                        state.missStreak = CONFIG.JAM_THRESHOLD;
+                        state.jamTime = CONFIG.JAM_DURATION;
+                        showMsg("SYSTEM CRITICAL - JAMMED", CONFIG.ERR_COLOR);
+                    }
+                    takeDamage(dmg);
+                    state.enemies.splice(i, 1);
+                }
+            }
+
+            state.particles.forEach(p => {
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.life -= dt * 2;
+            });
+            state.particles = state.particles.filter(p => p.life > 0);
+
+            if (state.shake > 0) state.shake -= dt * 60;
+        }
+
+        function createParticles(x, y, col) {
+            for(let i=0; i<8; i++) {
+                state.particles.push({
+                    x, y, 
+                    vx: (Math.random()-0.5)*10, 
+                    vy: (Math.random()-0.5)*10,
+                    col, life: 1
+                });
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, cw, ch);
+
+            let sx = 0, sy = 0;
+            if (state.shake > 0) {
+                sx = (Math.random()-0.5)*state.shake;
+                sy = (Math.random()-0.5)*state.shake;
+            }
+            ctx.save();
+            ctx.translate(sx, sy);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            for(let i=-50; i<=50; i+=10) {
+                let x = toPxX(i);
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ch); ctx.stroke();
+            }
+            
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.shadowColor = 'rgba(255,255,255,0.5)';
+            ctx.shadowBlur = 10;
+            ctx.beginPath(); ctx.moveTo(0, toPxY(0)); ctx.lineTo(cw, toPxY(0)); ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            const bx = toPxX(0);
+            const by = toPxY(0);
+            
+            let baseColor = '#1e293b';
+            let strokeColor = state.mode === 'sky' ? CONFIG.SKY_COLOR : CONFIG.SUB_COLOR;
+            let shadowColor = 'transparent';
+            let shadowBlur = 0;
+
+            if (state.shieldTime > 0) {
+                let pulse = 10 + Math.sin(Date.now() / 200) * 5;
+                shadowColor = '#22c55e'; 
+                strokeColor = '#4ade80'; 
+                shadowBlur = pulse;
+            } else if (state.hp <= 1) { 
+                let pulse = 20 + Math.sin(Date.now() / 100) * 10;
+                shadowColor = '#ef4444'; 
+                strokeColor = '#f87171'; 
+                shadowBlur = pulse;
+            } else {
+                let pulse = 5 + Math.sin(Date.now() / 1000) * 5;
+                shadowColor = '#0ea5e9'; 
+                shadowBlur = pulse;
+            }
+
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(bx - 20, by - 20, 40, 40);
+            
+            ctx.shadowColor = shadowColor;
+            ctx.shadowBlur = shadowBlur;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(bx - 20, by - 20, 40, 40);
+            ctx.shadowBlur = 0; 
+            
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + (state.params.h > 0 ? 15 : -15), by - (state.mode==='sky'?15:-15));
+            ctx.stroke();
+
+            if (state.active && !state.countingDown && state.jamTime <= 0) {
+                ctx.beginPath();
+                if (state.weapon === 'grenade') {
+                    let lx = toPxX(state.params.gx);
+                    ctx.strokeStyle = 'rgba(239,68,68,0.5)';
+                    ctx.setLineDash([5, 5]);
+                    
+                    if(state.mode === 'sky') {
+                        ctx.moveTo(lx, toPxY(0)); ctx.lineTo(lx, toPxY(30));
+                    } else {
+                        ctx.moveTo(lx, toPxY(0)); ctx.lineTo(lx, toPxY(-30));
+                    }
+                    
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = 'rgba(239,68,68,0.2)';
+                    ctx.fillRect(lx - 20, toPxY(1), 40, toPxY(0)-toPxY(2));
+
+                } else {
+                    const { a, h, k } = calculateTrajectory();
+                    const color = state.mode === 'sky' ? CONFIG.SKY_COLOR : CONFIG.SUB_COLOR;
+                    ctx.strokeStyle = color;
+                    ctx.globalAlpha = 0.3;
+                    
+                    let dir = h > 0 ? 1 : -1;
+                    let maxDist = Math.abs(h) * 2.5; 
+                    
+                    let first = true;
+                    for(let x = 0; x < maxDist; x+=0.1) {
+                        let simX = x * dir;
+                        let simY = a * Math.pow(simX - h, 2) + k;
+
+                        if (state.mode === 'sky' && simY < 0) break;
+                        if (state.mode === 'sub' && simY > 0) break;
+
+                        let px = toPxX(simX);
+                        let py = toPxY(simY);
+                        
+                        if(first) { ctx.moveTo(px, py); first=false; }
+                        else ctx.lineTo(px, py);
+                    }
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                    
+                    let vx = toPxX(h);
+                    let vy = toPxY(k);
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.arc(vx, vy, 3, 0, Math.PI*2); ctx.fill();
+                }
+            }
+
+            state.enemies.forEach(e => {
+                let ex = toPxX(e.x);
+                let ey = toPxY(e.y);
+                
+                // Elite Coloring
+                ctx.fillStyle = e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR);
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.shadowBlur = 10;
+                
+                if (e.isElite) {
+                    // Draw Elite Hexagon
+                    ctx.beginPath();
+                    for(let i=0; i<6; i++) {
+                        let angle = (i * Math.PI / 3);
+                        let hx = ex + 12 * Math.cos(angle);
+                        let hy = ey + 12 * Math.sin(angle);
+                        if(i===0) ctx.moveTo(hx, hy);
+                        else ctx.lineTo(hx, hy);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // HP Ring
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(ex, ey, 16, 0, (Math.PI*2) * (e.hp/CONFIG.ELITE_HP));
+                    ctx.stroke();
+                } 
+                else if (e.type === 'mole') {
+                    ctx.beginPath();
+                    ctx.moveTo(ex, ey-10); ctx.lineTo(ex+10, ey+10); ctx.lineTo(ex-10, ey+10);
+                    ctx.fill();
+                } else {
+                    ctx.beginPath(); ctx.arc(ex, ey, 8, 0, Math.PI*2); ctx.fill();
+                }
+                
+                if(Debugger.hitbox) {
+                    ctx.strokeStyle = 'red';
+                    ctx.strokeRect(ex-10, ey-10, 20, 20);
+                }
+            });
+            
+            state.powerups.forEach(p => {
+                let px = toPxX(p.x);
+                let py = toPxY(p.y);
+                
+                ctx.fillStyle = p.type === 'hp' ? '#ef4444' : '#22c55e';
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                
+                ctx.fillRect(px-10, py-10, 20, 20);
+                ctx.strokeRect(px-10, py-10, 20, 20);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 12px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(p.type === 'hp' ? '+' : 'S', px, py);
+            });
+
+            state.projectiles.forEach(p => {
+                if (p.type === 'laser') {
+                    let lx = toPxX(p.x);
+                    let w = p.width * CONFIG.SCALE;
+                    let alpha = 0.4 + Math.sin(Date.now()/50) * 0.2;
+                    ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
+                    ctx.shadowColor = 'red';
+                    ctx.shadowBlur = 30;
+
+                    if (p.mode === 'sky') {
+                        ctx.fillRect(lx - w/2, toPxY(30), w, toPxY(0) - toPxY(30));
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(lx - 2, toPxY(30), 4, toPxY(0) - toPxY(30));
+                    } else {
+                        ctx.fillRect(lx - w/2, toPxY(0), w, toPxY(-30) - toPxY(0));
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(lx - 2, toPxY(0), 4, toPxY(-30) - toPxY(0));
+                    }
+                    ctx.shadowBlur = 0;
+                } else {
+                    p.trail.forEach(t => {
+                        ctx.fillStyle = p.mode === 'sky' ? CONFIG.SKY_COLOR : CONFIG.SUB_COLOR;
+                        ctx.globalAlpha = t.life;
+                        ctx.fillRect(toPxX(t.x), toPxY(t.y), 2, 2);
+                        t.life -= 0.05;
+                    });
+                    p.trail = p.trail.filter(t => t.life > 0);
+                    
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle = p.unstable ? 'yellow' : 'white';
+                    ctx.beginPath(); ctx.arc(toPxX(p.x), toPxY(p.y), 4, 0, Math.PI*2); ctx.fill();
+                }
+            });
+
+            state.particles.forEach(p => {
+                ctx.fillStyle = p.col;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(toPxX(p.x), toPxY(p.y), 3, 3);
+            });
+            ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+
+        function loop(t) {
+            let dt = (t - state.lastTime) / 1000;
+            state.lastTime = t;
+            if (dt > 0.1) dt = 0.1;
+            
+            update(dt);
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        window.addEventListener('load', () => {
+            initStartScreen();
+            resize();
+            updateUI();
+            requestAnimationFrame(loop);
+        });
+
+        UI.inH.addEventListener('input', syncParamsFromInput);
+        UI.inA.addEventListener('input', syncParamsFromInput);
+        UI.inGx.addEventListener('input', syncParamsFromInput);
+        
+        UI.btnFire.addEventListener('click', fire);
+        UI.btnFireLeft.addEventListener('click', fire);
+        
+        UI.btnLaserLeft.addEventListener('click', toggleGrenade);
+        UI.btnLaserRight.addEventListener('click', toggleGrenade);
+        
+        UI.btnRestart.addEventListener('click', restartGame);
+        UI.btnStart.addEventListener('click', startGame);
+
+        window.addEventListener('keydown', e => {
+            if(e.shiftKey && e.key.toLowerCase() === 'd') Debugger.toggle();
+            if(Debugger.open && e.key.toLowerCase() === 'f' && Debugger.snap) {
+                UI.inH.value = parseFloat(UI.inH.value) * -1;
+                syncParamsFromInput();
+            }
+            if(e.code === 'Space' && state.active) {
+                fire();
+            }
+        });
+
+        document.getElementById('dbg-god').addEventListener('change', e => Debugger.god = e.target.checked);
+        document.getElementById('dbg-hit').addEventListener('change', e => Debugger.hitbox = e.target.checked);
+        document.getElementById('dbg-snap').addEventListener('change', e => Debugger.snap = e.target.checked);
+        document.getElementById('dbg-touch').addEventListener('change', e => {
+            Debugger.touchAim = e.target.checked;
+            updateUI();
+        });
+        document.getElementById('dbg-time').addEventListener('input', e => state.timeScale = parseFloat(e.target.value));
+
+    </script>
+</body>
+</html>
