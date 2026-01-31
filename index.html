@@ -26,11 +26,11 @@
         
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
+            height: 14px;
+            width: 14px;
             border-radius: 4px;
             background: currentColor;
-            margin-top: -6px;
+            margin-top: -5px;
             box-shadow: 0 0 10px currentColor;
             cursor: pointer;
             transition: transform 0.1s;
@@ -125,56 +125,88 @@
             );
             pointer-events: none;
         }
+
+        .inv-slot {
+            width: 32px;
+            height: 32px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .inv-slot.selected {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+        .inv-slot:hover {
+            border-color: rgba(255,255,255,0.5);
+        }
+        .inv-empty { opacity: 0.3; }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen overflow-hidden text-slate-200">
 
     <!-- TOP HUD BAR -->
-    <div class="h-16 glass-panel flex items-center justify-between px-6 z-40 shadow-lg relative shrink-0">
+    <div class="h-14 md:h-16 glass-panel flex items-center justify-between px-2 md:px-6 z-40 shadow-lg relative shrink-0 text-xs md:text-base">
         <!-- Left: Stats -->
-        <div class="flex gap-6 items-center w-32">
+        <div class="flex gap-2 md:gap-6 items-center w-24 md:w-48">
             <div class="flex flex-col leading-tight">
-                <span class="text-[10px] text-slate-500 font-bold tracking-widest">WAVE</span>
-                <span id="hud-wave" class="text-xl font-bold text-white">1</span>
+                <span class="text-[8px] md:text-[10px] text-slate-500 font-bold tracking-widest">WAVE</span>
+                <span id="hud-wave" class="text-sm md:text-xl font-bold text-white">1</span>
             </div>
             <div class="flex flex-col leading-tight">
-                <span class="text-[10px] text-slate-500 font-bold tracking-widest">SCORE</span>
-                <span id="hud-score" class="text-xl font-bold text-white font-mono">0</span>
+                <span class="text-[8px] md:text-[10px] text-slate-500 font-bold tracking-widest">SCORE</span>
+                <span id="hud-score" class="text-sm md:text-xl font-bold text-white font-mono">0</span>
+            </div>
+            <div class="flex flex-col leading-tight hidden sm:flex">
+                <span class="text-[8px] md:text-[10px] text-yellow-500 font-bold tracking-widest">CREDITS</span>
+                <span id="hud-credits" class="text-sm md:text-xl font-bold text-yellow-400 font-mono">¢0</span>
             </div>
         </div>
 
         <!-- Center: Status Messages Area -->
-        <div class="absolute left-1/2 -translate-x-1/2 top-0 h-full flex flex-col justify-center items-center pointer-events-none w-1/3">
-             <div id="message-display" class="text-xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] tracking-widest transition-opacity duration-300 opacity-0 whitespace-nowrap">
+        <div class="absolute left-1/2 -translate-x-1/2 top-0 h-full flex flex-col justify-center items-center pointer-events-none w-1/2 md:w-1/3">
+             <div id="message-display" class="text-sm md:text-xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] tracking-widest transition-opacity duration-300 opacity-0 whitespace-nowrap">
                 SYSTEM READY
             </div>
-            <div id="jam-warning" class="hidden text-xs bg-red-900/80 text-red-100 px-2 py-0.5 rounded border border-red-500 animate-pulse mt-1">
-                WEAPON JAMMED - COOLING
+            <div id="jam-warning" class="hidden text-[10px] md:text-xs bg-red-900/80 text-red-100 px-2 py-0.5 rounded border border-red-500 animate-pulse mt-1">
+                JAMMED
             </div>
         </div>
 
         <!-- Right: Health & Heat -->
-        <div class="flex gap-6 items-center justify-end w-48">
+        <div class="flex gap-2 md:gap-4 items-center justify-end w-32 md:w-64">
+            <button id="btn-music" class="w-6 h-6 md:w-8 md:h-8 rounded-full border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition">
+                ♫
+            </button>
+            
+            <button id="btn-shop" class="hidden px-2 py-1 md:px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] md:text-xs font-bold rounded border border-indigo-400 shadow-sm">SHOP</button>
+            
             <!-- Heat -->
-            <div class="flex flex-col items-end w-20">
-                <div class="flex justify-between w-full text-[10px] text-slate-500 font-bold mb-1">
+            <div class="flex flex-col items-end w-12 md:w-16">
+                <div class="flex justify-between w-full text-[8px] md:text-[10px] text-slate-500 font-bold mb-1">
                     <span>HEAT</span>
                     <span id="heat-text">0%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div class="w-full h-1 md:h-1.5 bg-slate-800 rounded-full overflow-hidden">
                     <div id="heat-bar" class="h-full bg-yellow-500 w-0 transition-all duration-200"></div>
                 </div>
             </div>
             <!-- HP -->
             <div class="flex flex-col items-end relative">
-                <div class="text-[10px] text-slate-500 font-bold tracking-widest mb-1">INTEGRITY</div>
+                <div class="text-[8px] md:text-[10px] text-slate-500 font-bold tracking-widest mb-1">INTEGRITY</div>
                 <div class="flex gap-1 relative" id="health-bar-container">
                     <div class="flex gap-1" id="health-bar">
                         <!-- Blocks injected by JS -->
                     </div>
                     <!-- Status Overlay -->
                     <div id="shield-status" class="hidden absolute inset-0 bg-green-900/90 border border-green-500 flex items-center justify-center z-10 rounded-sm">
-                        <span class="text-[9px] text-green-300 font-black tracking-wider animate-pulse">SHIELD ACTIVE</span>
+                        <span class="text-[8px] md:text-[9px] text-green-300 font-black tracking-wider animate-pulse">SHIELD</span>
                     </div>
                 </div>
             </div>
@@ -190,52 +222,53 @@
         
         <!-- Countdown Overlay -->
         <div id="countdown-layer" class="absolute inset-0 z-30 flex items-center justify-center pointer-events-none hidden">
-            <h1 id="countdown-text" class="text-9xl font-black text-white drop-shadow-[0_0_20px_rgba(14,165,233,0.8)] tracking-tighter outline-text">3</h1>
+            <h1 id="countdown-text" class="text-6xl md:text-9xl font-black text-white drop-shadow-[0_0_20px_rgba(14,165,233,0.8)] tracking-tighter outline-text">3</h1>
         </div>
 
         <!-- Debug Tag -->
-        <div id="debug-tag" class="hidden absolute top-4 right-4 z-20 flex gap-2">
+        <div id="debug-tag" class="hidden absolute top-4 right-4 z-20 flex flex-col gap-1 items-end">
              <div class="bg-blue-900/50 text-blue-400 border border-blue-500 text-[10px] px-2 py-1 rounded font-bold hidden" id="touch-tag">TOUCH AIM</div>
              <div class="bg-red-900/50 text-red-400 border border-red-500 text-[10px] px-2 py-1 rounded font-bold animate-pulse">DEBUG MODE</div>
+             <div class="bg-purple-900/50 text-purple-400 border border-purple-500 text-[10px] px-2 py-1 rounded font-bold hidden" id="rush-tag">BOSS RUSH</div>
         </div>
     </div>
 
     <!-- BOTTOM CONTROL DECK -->
-    <div class="h-auto min-h-[160px] glass-panel z-40 border-t border-slate-700 p-2 flex gap-2 items-center shrink-0">
+    <div class="h-auto min-h-[120px] md:min-h-[160px] glass-panel z-40 border-t border-slate-700 p-2 flex gap-2 items-center shrink-0">
         
         <!-- Left Controls (Fire + Laser) -->
-        <div class="h-full flex gap-2 w-40 shrink-0">
-            <button id="btn-fire-left" class="flex-1 bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white font-black text-sm md:text-xl tracking-widest rounded-lg shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1 group">
+        <div class="h-full flex gap-1 md:gap-2 w-24 md:w-40 shrink-0">
+            <button id="btn-fire-left" class="flex-1 bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white font-black text-xs md:text-xl tracking-widest rounded-lg shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all border-b-2 md:border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1 group">
                 <span>FIRE</span>
-                <span class="text-[10px] opacity-50 font-normal hidden md:block">SPACEBAR</span>
+                <span class="text-[8px] md:text-[10px] opacity-50 font-normal hidden md:block">SPACEBAR</span>
             </button>
-            <button id="btn-laser-left" class="w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group">
-                <div class="text-[10px] font-bold tracking-widest -rotate-90 whitespace-nowrap">LASER</div>
-                <div class="absolute bottom-1 right-1 w-4 h-4 bg-red-900 rounded-full flex items-center justify-center text-[8px] text-white border border-red-500 grenade-cnt">3</div>
+            <button id="btn-laser-left" class="w-8 md:w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group">
+                <div class="text-[8px] md:text-[10px] font-bold tracking-widest -rotate-90 whitespace-nowrap">LASER</div>
+                <div class="absolute bottom-1 right-1 w-3 h-3 md:w-4 md:h-4 bg-red-900 rounded-full flex items-center justify-center text-[8px] text-white border border-red-500 grenade-cnt">3</div>
             </button>
         </div>
 
-        <!-- Center: Sliders & Equation -->
-        <div class="h-full flex-1 flex flex-col justify-between gap-2 px-2 md:px-4 border-x border-slate-700/50 bg-slate-900/30 rounded-lg py-2 relative" id="controls-area">
+        <!-- Center: Sliders & Equation & Abilities -->
+        <div class="h-full flex-1 flex flex-col justify-between gap-1 px-1 md:px-4 border-x border-slate-700/50 bg-slate-900/30 rounded-lg py-1 relative" id="controls-area">
             
-            <!-- Equation Display -->
-            <div class="text-center font-mono text-xs md:text-sm text-slate-400 bg-black/40 rounded py-1 px-4 border border-white/5 mx-auto w-fit min-w-[240px] shadow-sm">
-                <span id="equation-display">y = a(x - h)² + k</span>
+            <!-- Top Row: Equation -->
+            <div class="flex justify-center items-center h-4 md:h-6">
+                <span id="equation-display" class="font-mono text-[10px] md:text-xs text-slate-400">y = a(x - h)² + k</span>
             </div>
 
-            <!-- Sliders Container -->
+            <!-- Middle Row: Sliders -->
             <div class="relative w-full flex-1 flex items-center"> 
                 <!-- Parabola Context -->
-                <div id="controls-parabola" class="grid grid-cols-2 gap-4 md:gap-8 w-full">
+                <div id="controls-parabola" class="grid grid-cols-2 gap-2 md:gap-8 w-full">
                     <div>
-                        <div class="flex justify-between text-[10px] mb-1 font-bold tracking-wider">
+                        <div class="flex justify-between text-[8px] md:text-[10px] mb-1 font-bold tracking-wider">
                             <span class="text-purple-400">OFFSET (h)</span>
                             <span id="val-h" class="font-mono text-white">15.0</span>
                         </div>
                         <input type="range" id="input-h" min="-45" max="45" step="0.5" value="15" class="theme-sky h-4">
                     </div>
                     <div>
-                        <div class="flex justify-between text-[10px] mb-1 font-bold tracking-wider">
+                        <div class="flex justify-between text-[8px] md:text-[10px] mb-1 font-bold tracking-wider">
                             <span class="text-cyan-400">STEEP (a)</span>
                             <span id="val-a" class="font-mono text-white">0.05</span>
                         </div>
@@ -245,70 +278,122 @@
 
                 <!-- Grenade Context -->
                 <div id="controls-grenade" class="hidden w-full flex-col justify-center">
-                    <div class="flex justify-between text-[10px] mb-1 font-bold tracking-wider">
+                    <div class="flex justify-between text-[8px] md:text-[10px] mb-1 font-bold tracking-wider">
                         <span class="text-red-400">TARGET X COORDINATE</span>
                         <span id="val-gx" class="font-mono text-white">15</span>
                     </div>
                     <input type="range" id="input-gx" min="-45" max="45" step="1" value="15" class="theme-grenade h-4">
                 </div>
             </div>
+
+            <!-- Bottom Row: Inventory & Ability Trigger -->
+            <div class="h-8 md:h-10 flex items-center justify-center gap-2 md:gap-4 mt-1">
+                <!-- Inventory Slots -->
+                <div class="flex gap-1" id="inventory-bar">
+                    <div class="inv-slot rounded" data-idx="0"><span class="inv-empty">.</span></div>
+                    <div class="inv-slot rounded" data-idx="1"><span class="inv-empty">.</span></div>
+                    <div class="inv-slot rounded" data-idx="2"><span class="inv-empty">.</span></div>
+                </div>
+                <!-- Activate Button -->
+                <button id="btn-ability" class="px-2 md:px-4 py-1 h-full bg-emerald-700/50 hover:bg-emerald-600 text-emerald-200 border border-emerald-500 rounded text-[8px] md:text-[10px] font-bold tracking-widest disabled:opacity-50 disabled:cursor-not-allowed">
+                    ENGAGE
+                </button>
+            </div>
         </div>
 
         <!-- Right Controls (Laser + Fire) -->
-        <div class="h-full flex gap-2 w-40 shrink-0">
-            <button id="btn-laser-right" class="w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group">
-                <div class="text-[10px] font-bold tracking-widest -rotate-90 whitespace-nowrap">LASER</div>
-                <div class="absolute bottom-1 left-1 w-4 h-4 bg-red-900 rounded-full flex items-center justify-center text-[8px] text-white border border-red-500 grenade-cnt">3</div>
+        <div class="h-full flex gap-1 md:gap-2 w-24 md:w-40 shrink-0">
+            <button id="btn-laser-right" class="w-8 md:w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group">
+                <div class="text-[8px] md:text-[10px] font-bold tracking-widest -rotate-90 whitespace-nowrap">LASER</div>
+                <div class="absolute bottom-1 left-1 w-3 h-3 md:w-4 md:h-4 bg-red-900 rounded-full flex items-center justify-center text-[8px] text-white border border-red-500 grenade-cnt">3</div>
             </button>
-            <button id="btn-fire" class="flex-1 bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white font-black text-sm md:text-xl tracking-widest rounded-lg shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1">
+            <button id="btn-fire" class="flex-1 bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white font-black text-xs md:text-xl tracking-widest rounded-lg shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all border-b-2 md:border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1">
                 <span>FIRE</span>
-                <span class="text-[10px] opacity-50 font-normal hidden md:block">CLICK</span>
+                <span class="text-[8px] md:text-[10px] opacity-50 font-normal hidden md:block">CLICK</span>
             </button>
         </div>
     </div>
 
     <!-- SCREENS & OVERLAYS -->
 
+    <!-- Shop Screen -->
+    <div id="shop-screen" class="fixed inset-0 z-50 bg-slate-950/95 flex flex-col items-center justify-center hidden p-4">
+        <div class="max-w-md w-full bg-slate-900 border border-indigo-500 rounded-xl p-4 md:p-6 shadow-2xl relative">
+            <h2 class="text-xl md:text-2xl font-black text-indigo-400 mb-2 md:mb-4 text-center tracking-widest border-b border-indigo-900 pb-2">SUPPLY DROP INBOUND</h2>
+            <div class="text-center mb-2 md:mb-4 text-slate-400 text-[10px] md:text-xs tracking-widest" id="shop-wave-title">PREPARING FOR WAVE 10</div>
+            <div class="text-center mb-4 text-yellow-400 font-mono text-lg md:text-xl" id="shop-credits">CREDITS: ¢0</div>
+            
+            <div class="space-y-2 md:space-y-3 mb-6">
+                <!-- Shop Item -->
+                <div class="flex justify-between items-center p-2 md:p-3 bg-slate-800 rounded hover:bg-slate-700 transition">
+                    <div>
+                        <div class="text-xs md:text-sm font-bold text-white">REPAIR KIT</div>
+                        <div class="text-[8px] md:text-[10px] text-slate-400">Restores 1 Hull Point</div>
+                    </div>
+                    <button class="px-2 md:px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded" onclick="buyItem('repair', 100)">¢100</button>
+                </div>
+                
+                <div class="flex justify-between items-center p-2 md:p-3 bg-slate-800 rounded hover:bg-slate-700 transition">
+                    <div>
+                        <div class="text-xs md:text-sm font-bold text-white">OVERSHIELD</div>
+                        <div class="text-[8px] md:text-[10px] text-slate-400">50% Dmg Reduction (10s)</div>
+                    </div>
+                    <button class="px-2 md:px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded" onclick="buyItem('shield', 250)">¢250</button>
+                </div>
+
+                <div class="flex justify-between items-center p-2 md:p-3 bg-slate-800 rounded hover:bg-slate-700 transition">
+                    <div>
+                        <div class="text-xs md:text-sm font-bold text-white">HEAT SINK</div>
+                        <div class="text-[8px] md:text-[10px] text-slate-400">No Heat Gen (10s)</div>
+                    </div>
+                    <button class="px-2 md:px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded" onclick="buyItem('heatsink', 350)">¢350</button>
+                </div>
+            </div>
+
+            <button id="btn-close-shop" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded">RESUME COMBAT</button>
+        </div>
+    </div>
+
     <!-- Start / Splash Screen -->
     <div id="start-screen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-4">
-        <div class="max-w-2xl w-full bg-slate-900 border border-slate-700 rounded-xl p-8 shadow-2xl relative overflow-hidden">
+        <div class="max-w-2xl w-full bg-slate-900 border border-slate-700 rounded-xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
             <div class="absolute inset-0 scanlines opacity-50 pointer-events-none"></div>
             
-            <h1 class="text-4xl md:text-5xl font-black text-center mb-2 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">
+            <h1 class="text-3xl md:text-5xl font-black text-center mb-2 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">
                 VECTOR SIEGE
             </h1>
-            <p class="text-center text-slate-400 mb-8 text-sm tracking-widest uppercase">Parabolic Defense Initiative</p>
+            <p class="text-center text-slate-400 mb-6 md:mb-8 text-xs md:text-sm tracking-widest uppercase">Parabolic Defense Initiative</p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-6 md:mb-8 relative z-10">
                 <!-- Controls -->
                 <div>
-                    <h3 class="text-sm font-bold text-white border-b border-slate-700 pb-2 mb-3">MISSION PROTOCOLS</h3>
-                    <ul class="space-y-3 text-xs text-slate-300">
+                    <h3 class="text-xs md:text-sm font-bold text-white border-b border-slate-700 pb-2 mb-2 md:mb-3">MISSION PROTOCOLS</h3>
+                    <ul class="space-y-2 md:space-y-3 text-[10px] md:text-xs text-slate-300">
                         <li class="flex items-start gap-2">
                             <span class="bg-slate-800 p-1 rounded border border-slate-600 font-mono text-cyan-400">AIM</span>
-                            <span>Touch/Drag field or use sliders. <span class="text-purple-400">h</span>=Dist <span class="text-cyan-400">a</span>=Steep.</span>
+                            <span>Touch/Drag to set <b>Vertex</b>. Curve follows path.</span>
                         </li>
                         <li class="flex items-start gap-2">
                             <span class="bg-slate-800 p-1 rounded border border-slate-600 font-mono text-orange-400">MODE</span>
                             <span>Tap with <b>2 FINGERS</b> to swap <span class="text-sky-400">SKY</span> / <span class="text-orange-400">SUB</span>.</span>
                         </li>
                         <li class="flex items-start gap-2">
-                            <span class="bg-slate-800 p-1 rounded border border-slate-600 font-mono text-red-400">FIRE</span>
-                            <span>Tap FIRE buttons. Use LASER for emergency vertical clear.</span>
+                            <span class="bg-slate-800 p-1 rounded border border-slate-600 font-mono text-indigo-400">SHOP</span>
+                            <span>Opens before every 10th wave. Upgrade wisely.</span>
                         </li>
                     </ul>
                 </div>
 
                 <!-- Dynamic Intel -->
                 <div>
-                    <h3 class="text-sm font-bold text-white border-b border-slate-700 pb-2 mb-3">INTEL DATABASE</h3>
-                    <div id="intel-list" class="space-y-2 text-xs">
+                    <h3 class="text-xs md:text-sm font-bold text-white border-b border-slate-700 pb-2 mb-2 md:mb-3">INTEL DATABASE</h3>
+                    <div id="intel-list" class="space-y-2 text-[10px] md:text-xs">
                         <!-- Populated by JS -->
                     </div>
                 </div>
             </div>
 
-            <button id="btn-start-game" class="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold tracking-[0.2em] rounded shadow-lg shadow-sky-900/50 transition-all border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 text-lg relative z-10">
+            <button id="btn-start-game" class="w-full py-3 md:py-4 bg-sky-600 hover:bg-sky-500 text-white font-bold tracking-[0.2em] rounded shadow-lg shadow-sky-900/50 transition-all border-b-4 border-sky-800 active:border-b-0 active:translate-y-1 text-base md:text-lg relative z-10">
                 INITIATE DEFENSE
             </button>
         </div>
@@ -358,6 +443,10 @@
                     <span class="text-slate-400 group-hover:text-white transition">Touch/Mouse Aim</span>
                     <input type="checkbox" id="dbg-touch" class="accent-sky-500">
                 </label>
+                <label class="flex justify-between items-center cursor-pointer group">
+                    <span class="text-purple-400 group-hover:text-white transition">Boss Rush (Elite Only)</span>
+                    <input type="checkbox" id="dbg-rush" class="accent-purple-500">
+                </label>
                 <div class="pt-2">
                     <div class="flex justify-between text-xs text-slate-500 mb-1">TIMESCALE</div>
                     <input type="range" id="dbg-time" min="0.1" max="2.0" step="0.1" value="1.0" class="w-full accent-purple-500">
@@ -370,7 +459,7 @@
     <script>
         /**
          * PARABOLA DEFENSE: VECTOR SIEGE
-         * Engine v3.3 - Elite Enemies & Boss Logic
+         * Engine v5.0 - Final Polish, New Elites & Boss Logic
          */
 
         const CONFIG = {
@@ -379,7 +468,7 @@
             WAVE_COOLDOWN: 100, 
             SKY_COLOR: '#0ea5e9',
             SUB_COLOR: '#f97316',
-            ELITE_COLOR: '#a855f7', // Purple
+            ELITE_COLOR: '#a855f7', 
             ERR_COLOR: '#ef4444',
             SAFE_COLOR: '#22c55e',
             LASER_DURATION: 2.0,
@@ -389,17 +478,39 @@
             ELITE_DMG: 2
         };
 
+        const ELITE_ROSTER = [
+            { name: "INTERCEPTOR", color: '#a855f7', hp: 5, speed: 0.8, score: 500, sides: 6, desc: "Armored. Jams weapon on impact." }, 
+            { name: "JUGGERNAUT", color: '#fbbf24', hp: 10, speed: 0.4, score: 1000, sides: 8, desc: "Massive Hull. Slow but deadly." }, 
+            { name: "PHANTOM", color: '#e879f9', hp: 4, speed: 1.5, score: 800, sides: 5, desc: "Fast. Blinks when targeted." },
+            { name: "DIVIDER", color: '#2dd4bf', hp: 6, speed: 0.6, score: 700, sides: 4, desc: "Fractal. Splits on destruction." }
+        ];
+
         const GAME_INTEL = {
             enemies: [
-                { name: "AERO DRONE", color: CONFIG.SKY_COLOR, desc: "Standard aerial unit. Weak to Sky shots." },
-                { name: "TERRA MOLE", color: CONFIG.SUB_COLOR, desc: "Subterranean digger. Weak to Sub shots." },
-                { name: "ELITE INTERCEPTOR", color: CONFIG.ELITE_COLOR, desc: "Heavily armored. Causes instant JAM on impact." }
+                { name: "AERO DRONE", color: CONFIG.SKY_COLOR, desc: "Standard aerial unit." },
+                { name: "TERRA MOLE", color: CONFIG.SUB_COLOR, desc: "Subterranean digger." },
+                { name: "ELITES", color: ELITE_ROSTER[0].color, desc: "Bosses appear every 5th wave." },
+                { name: "OBLIVION", color: '#ef4444', desc: "Mega Boss every 15th wave." }
             ],
             powerups: [
-                { name: "REPAIR MOD", color: "#ef4444", desc: "Restores Hull. Spawns when damaged." },
-                { name: "SHIELD MATRIX", color: "#22c55e", desc: "Rare drop. Halves incoming damage." }
+                { name: "REPAIR MOD", color: "#ef4444", desc: "Restores Hull." },
+                { name: "SHIELD MATRIX", color: "#22c55e", desc: "Halves Dmg." }
             ]
         };
+
+        // --- DRAWING HELPER FUNCTIONS ---
+        
+        function drawPoly(ctx, x, y, r, sides, rotation = 0) {
+            ctx.beginPath();
+            for (let i = 0; i < sides; i++) {
+                const ang = (Math.PI * 2 / sides) * i + rotation;
+                const px = x + r * Math.cos(ang);
+                const py = y + r * Math.sin(ang);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+        }
 
         // --- AUDIO SYSTEM ---
         const ToneSynth = {
@@ -474,6 +585,70 @@
                     gain.gain.linearRampToValueAtTime(0, t + 0.1);
                     osc.start(t);
                     osc.stop(t + 0.1);
+                } else if (type === 'buy') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, t);
+                    osc.frequency.setValueAtTime(1000, t + 0.1);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.2);
+                    osc.start(t);
+                    osc.stop(t + 0.2);
+                } else if (type === 'warp') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, t);
+                    osc.frequency.linearRampToValueAtTime(200, t + 0.3);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.3);
+                    osc.start(t);
+                    osc.stop(t + 0.3);
+                }
+            }
+        };
+
+        const MusicPlayer = {
+            currentTrackNum: 1,
+            audio: null,
+            isPlaying: false,
+            
+            init() {
+                // Determine track based on current wave (1-10 -> T1, 11-20 -> T2)
+                const targetTrack = Math.ceil(Math.max(1, state.wave) / 10);
+                this.loadTrack(targetTrack);
+            },
+            
+            checkTrack(wave) {
+                const targetTrack = Math.ceil(Math.max(1, wave) / 10);
+                if(targetTrack !== this.currentTrackNum) {
+                    this.loadTrack(targetTrack);
+                    if(this.isPlaying) this.audio.play();
+                }
+            },
+            
+            loadTrack(num) {
+                if(this.audio) {
+                    this.audio.pause();
+                    this.audio = null;
+                }
+                this.currentTrackNum = num;
+                // Files in bgmusic/Track 1.mp3, Track 2.mp3, etc.
+                this.audio = new Audio(`bgmusic/Track ${num}.mp3`);
+                this.audio.volume = 0.4;
+                this.audio.loop = true; // Simple looping
+            },
+            
+            toggle() {
+                if(!this.audio) this.init();
+                
+                if(this.isPlaying) {
+                    this.audio.pause();
+                    this.isPlaying = false;
+                    document.getElementById('btn-music').classList.remove('text-green-400');
+                    document.getElementById('btn-music').classList.add('text-slate-400');
+                } else {
+                    this.audio.play().catch(e => console.log("Audio play failed:", e));
+                    this.isPlaying = true;
+                    document.getElementById('btn-music').classList.add('text-green-400');
+                    document.getElementById('btn-music').classList.remove('text-slate-400');
                 }
             }
         };
@@ -483,24 +658,29 @@
             hp: CONFIG.MAX_HP,
             wave: 1,
             score: 0,
+            credits: 0,
             highScore: 0,
             grenades: 3, 
             mode: 'sky', 
             weapon: 'parabola', 
             shieldTime: 0,
             jamTime: 0,
+            noHeatTime: 0,
             missStreak: 0, 
             params: { h: 15, a: 0.05, gx: 15 },
             projectiles: [],
             enemies: [],
             powerups: [],
             particles: [],
+            inventory: [],
+            selectedInv: -1,
             lastTime: 0,
             timeScale: 1.0,
             shake: 0,
             active: false,
             waveActive: false,
-            countingDown: false
+            countingDown: false,
+            pendingSpawns: 0
         };
 
         const Debugger = {
@@ -508,11 +688,13 @@
             god: false,
             hitbox: false,
             snap: false,
-            touchAim: true, // Default ON
+            touchAim: true, 
+            bossRush: false, // New Boss Rush mode
             toggle() {
                 this.open = !this.open;
                 document.getElementById('debug-menu').classList.toggle('hidden', !this.open);
-                document.getElementById('debug-tag').classList.toggle('hidden', !this.open && !this.god && !this.snap && !this.touchAim);
+                document.getElementById('debug-tag').classList.toggle('hidden', !this.open && !this.god && !this.snap && !this.touchAim && !this.bossRush);
+                document.getElementById('rush-tag').classList.toggle('hidden', !this.bossRush);
             }
         };
 
@@ -521,6 +703,7 @@
         const ctx = canvas.getContext('2d');
         const gameOverScreen = document.getElementById('game-over-screen');
         const startScreen = document.getElementById('start-screen');
+        const shopScreen = document.getElementById('shop-screen');
         const countdownLayer = document.getElementById('countdown-layer');
         const countdownText = document.getElementById('countdown-text');
         
@@ -532,6 +715,18 @@
             ch = canvas.height = container.clientHeight;
             ox = cw / 2;
             oy = ch / 2;
+            
+            // Dynamic Scaling for Devices
+            // Base logic: we want to see roughly +/- 30 to 40 units horizontally
+            // Mobile (375px) -> Scale ~5-6
+            // Desktop (1920px) -> Scale ~24
+            
+            // Let's aim for visible width of 80 units on Desktop, 60 on Mobile
+            const targetVisibleUnits = cw < 600 ? 60 : 80;
+            CONFIG.SCALE = cw / targetVisibleUnits;
+            
+            // Min/Max clamp to prevent breaking
+            CONFIG.SCALE = Math.max(8, Math.min(30, CONFIG.SCALE));
         }
         window.addEventListener('resize', resize);
         setTimeout(resize, 100);
@@ -556,6 +751,7 @@
             btnFireLeft: document.getElementById('btn-fire-left'),
             btnLaserLeft: document.getElementById('btn-laser-left'),
             btnLaserRight: document.getElementById('btn-laser-right'),
+            btnMusic: document.getElementById('btn-music'),
             grenadeCnts: document.querySelectorAll('.grenade-cnt'),
             
             hpBar: document.getElementById('health-bar'),
@@ -567,6 +763,7 @@
             
             msg: document.getElementById('message-display'),
             score: document.getElementById('hud-score'),
+            credits: document.getElementById('hud-credits'),
             wave: document.getElementById('hud-wave'),
             heatBar: document.getElementById('heat-bar'),
             heatText: document.getElementById('heat-text'),
@@ -577,9 +774,105 @@
             goHigh: document.getElementById('go-high'),
             btnRestart: document.getElementById('btn-restart'),
             btnStart: document.getElementById('btn-start-game'),
+            btnCloseShop: document.getElementById('btn-close-shop'),
+            shopCredits: document.getElementById('shop-credits'),
+            shopWaveTitle: document.getElementById('shop-wave-title'),
+            
+            invBar: document.getElementById('inventory-bar'),
+            btnAbility: document.getElementById('btn-ability'),
             
             touchTag: document.getElementById('touch-tag')
         };
+
+        // --- UI HELPER ---
+        function setText(el, text) {
+            if(el) el.innerText = text;
+        }
+
+        // --- SHOP & ABILITIES ---
+        function openShop() {
+            if (state.hp <= 0) return;
+            state.active = false; // Pause
+            setText(UI.shopCredits, `CREDITS: ¢${state.credits}`);
+            // Calculate next wave for display
+            let nextWave = state.wave; 
+            if(UI.shopWaveTitle) setText(UI.shopWaveTitle, `PREPARING FOR WAVE ${nextWave}`);
+            shopScreen.classList.remove('hidden');
+        }
+
+        function closeShop() {
+            shopScreen.classList.add('hidden');
+            state.active = true;
+            resize(); 
+            startWaveCountdown();
+        }
+
+        function buyItem(type, cost) {
+            // Boss Rush Free Shop
+            if (Debugger.bossRush) cost = 0;
+            
+            if (state.credits >= cost && state.inventory.length < 3) {
+                state.credits -= cost;
+                state.inventory.push(type);
+                setText(UI.shopCredits, `CREDITS: ¢${state.credits}`);
+                ToneSynth.play('buy');
+                updateUI();
+            } else {
+                ToneSynth.play('warning');
+            }
+        }
+
+        function renderInventory() {
+            if(!UI.invBar) return;
+            UI.invBar.innerHTML = '';
+            for(let i=0; i<3; i++) {
+                const item = state.inventory[i];
+                const slot = document.createElement('div');
+                slot.className = `inv-slot rounded ${state.selectedInv === i ? 'selected' : ''}`;
+                if(item) {
+                    slot.innerText = item === 'shield' ? 'S' : (item === 'repair' ? '+' : 'H');
+                    slot.style.color = item === 'shield' ? '#4ade80' : (item === 'repair' ? '#f87171' : '#fbbf24');
+                    slot.onclick = () => {
+                        state.selectedInv = i;
+                        updateUI();
+                    };
+                } else {
+                    slot.innerHTML = '<span class="inv-empty">.</span>';
+                }
+                UI.invBar.appendChild(slot);
+            }
+            
+            if(UI.btnAbility) {
+                const hasSel = state.selectedInv >= 0 && state.inventory[state.selectedInv];
+                UI.btnAbility.disabled = !hasSel;
+                UI.btnAbility.classList.toggle('opacity-50', !hasSel);
+                UI.btnAbility.classList.toggle('cursor-not-allowed', !hasSel);
+            }
+        }
+
+        function engageAbility() {
+            if (state.selectedInv >= 0 && state.inventory[state.selectedInv]) {
+                const item = state.inventory[state.selectedInv];
+                state.inventory.splice(state.selectedInv, 1);
+                state.selectedInv = -1;
+                
+                if (item === 'repair') {
+                    state.hp = Math.min(CONFIG.MAX_HP, state.hp + 1);
+                    showMsg("SYSTEM REPAIRED", CONFIG.SAFE_COLOR);
+                } else if (item === 'shield') {
+                    state.shieldTime = 10;
+                    showMsg("OVERSHIELD ONLINE", CONFIG.SAFE_COLOR);
+                } else if (item === 'heatsink') {
+                    state.noHeatTime = 10;
+                    state.missStreak = 0;
+                    state.jamTime = 0;
+                    showMsg("HEAT SINK ACTIVE", "yellow");
+                }
+                
+                ToneSynth.play('powerup');
+                updateUI();
+            }
+        }
 
         // --- INIT INTEL SCREEN ---
         function initStartScreen() {
@@ -604,6 +897,7 @@
             });
             
             document.getElementById('dbg-touch').checked = Debugger.touchAim;
+            document.getElementById('dbg-rush').checked = Debugger.bossRush;
         }
 
         function startGame() {
@@ -612,118 +906,127 @@
             state.active = true;
             resize();
             startWaveCountdown();
+            MusicPlayer.init(); // Start Track 1
         }
 
         function updateUI() {
-            // Update labels
-            UI.lblH.innerText = state.params.h.toFixed(1);
-            UI.lblA.innerText = state.params.a.toFixed(3);
-            UI.lblGx.innerText = state.params.gx.toFixed(0);
+            setText(UI.lblH, state.params.h.toFixed(1));
+            setText(UI.lblA, state.params.a.toFixed(3));
+            setText(UI.lblGx, state.params.gx.toFixed(0));
 
-            // Sync Slider Values
-            if(document.activeElement !== UI.inH) UI.inH.value = state.params.h;
-            if(document.activeElement !== UI.inA) UI.inA.value = state.params.a;
-            if(document.activeElement !== UI.inGx) UI.inGx.value = state.params.gx;
+            if(UI.inH && document.activeElement !== UI.inH) UI.inH.value = state.params.h;
+            if(UI.inA && document.activeElement !== UI.inA) UI.inA.value = state.params.a;
+            if(UI.inGx && document.activeElement !== UI.inGx) UI.inGx.value = state.params.gx;
 
-            // Equation Update
             const { a, h, k } = calculateTrajectory();
             const signH = h >= 0 ? '-' : '+';
             const valH = Math.abs(h).toFixed(1);
             const signK = k >= 0 ? '+' : '';
             const valK = k.toFixed(1);
-            UI.eqDisplay.innerHTML = `y = ${a.toFixed(2)}(x ${signH} ${valH})² ${signK}${valK}`;
+            if(UI.eqDisplay) UI.eqDisplay.innerHTML = `y = ${a.toFixed(2)}(x ${signH} ${valH})² ${signK}${valK}`;
 
-            // Mode Styles
             const isSky = state.mode === 'sky';
             const isGrenade = state.weapon === 'grenade';
 
             const theme = isGrenade ? 'theme-grenade' : (isSky ? 'theme-sky' : 'theme-sub');
-            UI.inH.className = theme + ' h-4';
-            UI.inA.className = theme + ' h-4';
-            UI.inGx.className = theme + ' h-4';
+            if(UI.inH) UI.inH.className = theme + ' h-4';
+            if(UI.inA) UI.inA.className = theme + ' h-4';
+            if(UI.inGx) UI.inGx.className = theme + ' h-4';
             
-            // Context Visibility
             const fireBtnClass = "flex-1 font-black text-sm md:text-xl tracking-widest rounded-lg transition-all border-b-4 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1";
             
             if (isGrenade) {
-                UI.ctrlParabola.classList.add('hidden');
-                UI.ctrlGrenade.classList.remove('hidden');
-                UI.ctrlGrenade.classList.add('flex');
+                if(UI.ctrlParabola) UI.ctrlParabola.classList.add('hidden');
+                if(UI.ctrlGrenade) UI.ctrlGrenade.classList.remove('hidden');
+                if(UI.ctrlGrenade) UI.ctrlGrenade.classList.add('flex');
                 
                 const style = `${fireBtnClass} bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] border-red-800`;
-                UI.btnFire.className = style;
-                UI.btnFireLeft.className = style;
-                UI.btnFire.querySelector('span').innerText = "DEPLOY";
-                UI.btnFireLeft.querySelector('span').innerText = "DEPLOY";
+                if(UI.btnFire) {
+                    UI.btnFire.className = style;
+                    const sp = UI.btnFire.querySelector('span');
+                    if(sp) sp.innerText = "DEPLOY";
+                }
+                if(UI.btnFireLeft) {
+                    UI.btnFireLeft.className = style;
+                    const sp = UI.btnFireLeft.querySelector('span');
+                    if(sp) sp.innerText = "DEPLOY";
+                }
                 
-                // Lasers active state
-                const laserStyle = "w-12 bg-red-900 border border-red-500 text-white rounded-lg flex flex-col items-center justify-center gap-1 shadow-inner relative overflow-hidden ring-2 ring-red-400";
-                UI.btnLaserLeft.className = laserStyle;
-                UI.btnLaserRight.className = laserStyle;
+                const laserStyle = "w-8 md:w-12 bg-red-900 border border-red-500 text-white rounded-lg flex flex-col items-center justify-center gap-1 shadow-inner relative overflow-hidden ring-2 ring-red-400";
+                if(UI.btnLaserLeft) UI.btnLaserLeft.className = laserStyle;
+                if(UI.btnLaserRight) UI.btnLaserRight.className = laserStyle;
             } else {
-                UI.ctrlParabola.classList.remove('hidden');
-                UI.ctrlGrenade.classList.add('hidden');
-                UI.ctrlGrenade.classList.remove('flex');
+                if(UI.ctrlParabola) UI.ctrlParabola.classList.remove('hidden');
+                if(UI.ctrlGrenade) UI.ctrlGrenade.classList.add('hidden');
+                if(UI.ctrlGrenade) UI.ctrlGrenade.classList.remove('flex');
                 
-                // Lasers inactive state
-                const laserStyle = "w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group";
-                UI.btnLaserLeft.className = laserStyle;
-                UI.btnLaserRight.className = laserStyle;
+                const laserStyle = "w-8 md:w-12 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-red-900/50 text-red-400 rounded-lg flex flex-col items-center justify-center gap-1 transition-all shadow-inner relative overflow-hidden group";
+                if(UI.btnLaserLeft) UI.btnLaserLeft.className = laserStyle;
+                if(UI.btnLaserRight) UI.btnLaserRight.className = laserStyle;
 
+                let txt = "FIRE";
+                let style = "";
                 if (state.jamTime > 0) {
-                     const jamStyle = "flex-1 bg-red-900/50 text-red-500 cursor-not-allowed font-black text-sm md:text-xl tracking-widest rounded-lg border border-red-900 flex flex-col items-center justify-center gap-1";
-                     UI.btnFire.className = jamStyle;
-                     UI.btnFireLeft.className = jamStyle;
-                     UI.btnFire.querySelector('span').innerText = "JAMMED";
-                     UI.btnFireLeft.querySelector('span').innerText = "JAMMED";
+                     style = "flex-1 bg-red-900/50 text-red-500 cursor-not-allowed font-black text-sm md:text-xl tracking-widest rounded-lg border border-red-900 flex flex-col items-center justify-center gap-1";
+                     txt = "JAMMED";
                 } else if (isSky) {
-                    const skyStyle = `${fireBtnClass} bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white shadow-[0_0_20px_rgba(14,165,233,0.4)] border-sky-800`;
-                    UI.btnFire.className = skyStyle;
-                    UI.btnFireLeft.className = skyStyle;
-                    UI.btnFire.querySelector('span').innerText = "FIRE";
-                    UI.btnFireLeft.querySelector('span').innerText = "FIRE";
+                    style = `${fireBtnClass} bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white shadow-[0_0_20px_rgba(14,165,233,0.4)] border-sky-800`;
                 } else {
-                    const subStyle = `${fireBtnClass} bg-orange-600 hover:bg-orange-500 active:bg-orange-400 text-white shadow-[0_0_20px_rgba(249,115,22,0.4)] border-orange-800`;
-                    UI.btnFire.className = subStyle;
-                    UI.btnFireLeft.className = subStyle;
-                    UI.btnFire.querySelector('span').innerText = "FIRE";
-                    UI.btnFireLeft.querySelector('span').innerText = "FIRE";
+                    style = `${fireBtnClass} bg-orange-600 hover:bg-orange-500 active:bg-orange-400 text-white shadow-[0_0_20px_rgba(249,115,22,0.4)] border-orange-800`;
+                }
+                
+                if(UI.btnFire) {
+                    UI.btnFire.className = style;
+                    const sp = UI.btnFire.querySelector('span');
+                    if(sp) sp.innerText = txt;
+                }
+                if(UI.btnFireLeft) {
+                    UI.btnFireLeft.className = style;
+                    const sp = UI.btnFireLeft.querySelector('span');
+                    if(sp) sp.innerText = txt;
                 }
             }
 
             UI.grenadeCnts.forEach(el => el.innerText = state.grenades);
-            UI.score.innerText = state.score;
-            UI.wave.innerText = state.wave;
+            setText(UI.score, state.score);
+            setText(UI.credits, `¢${state.credits}`);
+            setText(UI.wave, state.wave);
             
-            // HP Render
-            UI.hpBar.innerHTML = '';
-            let blocks = Math.ceil(state.hp);
-            for(let i=0; i<3; i++) {
-                const isActive = i < blocks;
-                const d = document.createElement('div');
-                let colorClass = 'bg-slate-800 border border-slate-700';
-                if (isActive) {
-                     if (state.shieldTime > 0) colorClass = 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]';
-                     else if (state.hp <= 1) colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse';
-                     else colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]';
+            if(UI.hpBar) {
+                UI.hpBar.innerHTML = '';
+                let blocks = Math.ceil(state.hp);
+                for(let i=0; i<3; i++) {
+                    const isActive = i < blocks;
+                    const d = document.createElement('div');
+                    let colorClass = 'bg-slate-800 border border-slate-700';
+                    if (isActive) {
+                         if (state.shieldTime > 0) colorClass = 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]';
+                         else if (state.hp <= 1) colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse';
+                         else colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]';
+                    }
+                    d.className = `w-3 h-6 rounded-sm transition-all duration-300 ${colorClass}`;
+                    UI.hpBar.appendChild(d);
                 }
-                d.className = `w-3 h-6 rounded-sm transition-all duration-300 ${colorClass}`;
-                UI.hpBar.appendChild(d);
             }
             
-            // Shield & Jam UI
-            UI.shieldStatus.classList.toggle('hidden', state.shieldTime <= 0);
-            UI.jamOverlay.classList.toggle('hidden', state.jamTime <= 0);
-            UI.jamWarning.classList.toggle('hidden', state.jamTime <= 0);
+            if(UI.shieldStatus) UI.shieldStatus.classList.toggle('hidden', state.shieldTime <= 0);
+            if(UI.jamOverlay) UI.jamOverlay.classList.toggle('hidden', state.jamTime <= 0);
+            if(UI.jamWarning) UI.jamWarning.classList.toggle('hidden', state.jamTime <= 0);
             
-            // Heat Meter
             let heatPct = Math.min(100, (state.missStreak / CONFIG.JAM_THRESHOLD) * 100);
             if(state.jamTime > 0) heatPct = 100;
-            UI.heatBar.style.width = `${heatPct}%`;
-            UI.heatBar.className = `h-full transition-all duration-200 ${heatPct > 70 ? 'bg-red-500' : (heatPct > 40 ? 'bg-yellow-500' : 'bg-slate-500')}`;
-            UI.heatText.innerText = Math.floor(heatPct) + "%";
+            if(state.noHeatTime > 0) heatPct = 0; 
+            
+            if(UI.heatBar) {
+                UI.heatBar.style.width = `${heatPct}%`;
+                UI.heatBar.className = `h-full transition-all duration-200 ${heatPct > 70 ? 'bg-red-500' : (state.noHeatTime > 0 ? 'bg-blue-400' : (heatPct > 40 ? 'bg-yellow-500' : 'bg-slate-500'))}`;
+            }
+            setText(UI.heatText, state.noHeatTime > 0 ? "INF" : (Math.floor(heatPct) + "%"));
 
-            UI.touchTag.classList.toggle('hidden', !Debugger.touchAim);
+            renderInventory();
+            if(UI.touchTag) UI.touchTag.classList.toggle('hidden', !Debugger.touchAim);
+            // Debug Indicator update
+            document.getElementById('rush-tag').classList.toggle('hidden', !Debugger.bossRush);
         }
         
         function syncParamsFromInput() {
@@ -736,7 +1039,6 @@
         function setMode(m) {
             ToneSynth.init();
             state.mode = m;
-            state.weapon = 'parabola';
             updateUI();
         }
 
@@ -795,7 +1097,7 @@
             if (state.jamTime > 0) {
                 unstable = true;
                 ToneSynth.play('jam');
-            } else {
+            } else if (state.noHeatTime <= 0) {
                 state.missStreak += 1;
                 if (state.missStreak >= CONFIG.JAM_THRESHOLD) {
                     state.jamTime = CONFIG.JAM_DURATION;
@@ -822,47 +1124,83 @@
         }
 
         function takeDamage(dmgAmount) {
+            if (!state.active) return; 
             if(Debugger.god) return;
             ToneSynth.play('warning');
             
             let dmg = state.shieldTime > 0 ? (dmgAmount * 0.5) : dmgAmount;
             state.hp -= dmg;
             
+            if (state.hp < 0) state.hp = 0;
+            
             state.shake = 20;
             document.getElementById('game-container').classList.add('damage-flash');
             setTimeout(() => document.getElementById('game-container').classList.remove('damage-flash'), 500);
             updateUI();
-            if(state.hp <= 0) gameOver();
+            
+            if(state.hp <= 0) {
+                gameOver();
+            }
         }
 
-        function spawnEnemy(isElite) {
+        function spawnEnemy(forceEliteType = null) {
             if(!state.waveActive) return;
             
             const speedBase = 1 + (state.wave * 0.2);
-            const isSub = Math.random() > 0.6;
-            let spawnX = (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random()*10);
             
-            // ELITE PROPERTIES
+            let isSub = Math.random() > 0.6;
+            let spawnX = (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random()*10);
+            let spawnY = isSub ? -Math.random()*12 - 2 : Math.random()*12 + 2; 
+            
             let type = isSub ? 'mole' : 'drone';
             let hp = 1;
             let speed = speedBase * (Math.random() + 0.5);
-            
-            if (isElite) {
-                type = 'elite';
-                hp = CONFIG.ELITE_HP;
-                speed *= 0.8; // Elites are slower/heavier
+            let color = isSub ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR;
+            let score = 100;
+            let sides = isSub ? 3 : 4;
+            let isElite = false;
+            let isMegaBoss = false;
+            let name = ""; 
+
+            if (forceEliteType) {
+                if (forceEliteType.name === "OBLIVION") {
+                    isMegaBoss = true;
+                    // Mega Boss Stats
+                    type = 'megaboss';
+                    name = "OBLIVION";
+                    hp = 25; // Massive HP
+                    speed = 0.3; // Very slow
+                    color = '#ef4444'; // Red
+                    score = 5000;
+                    sides = 12;
+                } else {
+                    isElite = true;
+                    type = 'elite';
+                    name = forceEliteType.name;
+                    hp = forceEliteType.hp;
+                    speed = forceEliteType.speed * speedBase; 
+                    color = forceEliteType.color;
+                    score = forceEliteType.score;
+                    sides = forceEliteType.sides;
+                }
             }
 
             state.enemies.push({
                 x: spawnX,
-                y: isSub ? -Math.random()*15 - 2 : Math.random()*15 + 2,
+                y: spawnY,
+                baseY: spawnY, 
                 type: type,
+                eliteName: name, 
                 speed: speed,
                 homing: false,
                 dead: false,
                 hp: hp,
                 maxHp: hp,
-                isElite: !!isElite
+                isElite: isElite,
+                isMegaBoss: isMegaBoss,
+                color: color,
+                sides: sides,
+                hasDodged: false 
             });
         }
         
@@ -896,6 +1234,7 @@
             const rect = canvas.getBoundingClientRect();
             const px = e.clientX - rect.left;
             const py = e.clientY - rect.top;
+            
             const mx = toMathX(px);
             const my = toMathY(py);
             
@@ -907,11 +1246,26 @@
             if (state.weapon === 'grenade') {
                 state.params.gx = Math.max(-45, Math.min(45, mx));
             } else {
-                const safeX = Math.abs(mx) < 0.5 ? 0.5 : mx;
-                let calculatedA = -my / (safeX * safeX);
+                // VERTEX AIMING LOGIC (REVERTED TO CLASSIC)
+                const h = mx;
+                let k = my;
+                
+                const clampedH = Math.max(-45, Math.min(45, h));
+                if (state.mode === 'sky') k = Math.max(2, k);
+                else k = Math.min(-2, k);
+                
+                // Calculate A based on Vertex: a = -k / h^2
+                // We need positive magnitude for storage
+                let calculatedA = 0.05;
+                const distSq = clampedH * clampedH;
+                if (distSq > 1) {
+                    calculatedA = -k / distSq;
+                }
+                
                 let magA = Math.abs(calculatedA);
                 magA = Math.max(0.01, Math.min(0.30, magA));
-                state.params.h = Math.max(-45, Math.min(45, mx));
+                
+                state.params.h = clampedH;
                 state.params.a = magA;
             }
             updateUI();
@@ -949,6 +1303,9 @@
         // --- GAME LOOP ---
 
         function startWaveCountdown() {
+            // Music Update check
+            MusicPlayer.checkTrack(state.wave);
+            
             state.countingDown = true;
             countdownLayer.classList.remove('hidden');
             let count = 3;
@@ -968,9 +1325,20 @@
                 if(count > 0) {
                     pulse(count);
                 } else if (count === 0) {
-                    pulse("ENGAGE");
-                    countdownText.style.color = CONFIG.SAFE_COLOR;
-                    ToneSynth.play('start');
+                    if (state.wave % 15 === 0) {
+                        pulse("MEGA BOSS");
+                        countdownText.style.color = "#ef4444"; // Red for Mega Boss
+                        ToneSynth.play('warning');
+                    }
+                    else if (state.wave % 5 === 0) {
+                        pulse("BOSS DETECTED");
+                        countdownText.style.color = CONFIG.ERR_COLOR;
+                        ToneSynth.play('warning');
+                    } else {
+                        pulse("ENGAGE");
+                        countdownText.style.color = CONFIG.SAFE_COLOR;
+                        ToneSynth.play('start');
+                    }
                 } else {
                     clearInterval(interval);
                     countdownLayer.classList.add('hidden');
@@ -989,20 +1357,56 @@
             }
             updateUI();
             
-            let count = 3 + state.wave;
-            for(let i=0; i<count; i++) {
-                // Elite Check: Wave 5, 10, etc.
-                // 50% chance for ANY enemy to be Elite on these waves
-                let isElite = (state.wave % 5 === 0) && (Math.random() < 0.5);
-                setTimeout(() => spawnEnemy(isElite), i * 800);
+            const isMegaBossWave = state.wave % 15 === 0;
+            const isBossWave = state.wave % 5 === 0;
+            let count = 0;
+
+            if (isMegaBossWave) {
+                 // MEGA BOSS WAVE
+                 showMsg("WARNING: OBLIVION DETECTED", "#ef4444");
+                 count = 1;
+                 state.pendingSpawns = count; 
+                 // Spawn Mega Boss (Special Type)
+                 setTimeout(() => {
+                        spawnEnemy({ name: "OBLIVION" }); // Special flag in spawnEnemy
+                        state.pendingSpawns--;
+                 }, 2000);
+
+            } else if (isBossWave) {
+                let tierIndex = (state.wave / 5) - 1;
+                let eliteType = ELITE_ROSTER[tierIndex % ELITE_ROSTER.length];
+                showMsg(`WARNING: ${eliteType.name}`, eliteType.color);
+                count = 3;
+                state.pendingSpawns = count; // Track spawns
+                for(let i=0; i<count; i++) {
+                    setTimeout(() => {
+                        spawnEnemy(eliteType);
+                        state.pendingSpawns--;
+                    }, i * 1500);
+                }
+            } else {
+                let maxTier = Math.floor(state.wave / 5);
+                count = 3 + Math.floor(state.wave / 2);
+                state.pendingSpawns = count; // Track spawns
+                for(let i=0; i<count; i++) {
+                    let eliteSpawn = null;
+                    if (maxTier > 0 && Math.random() < 0.15) { 
+                        let randomTier = Math.floor(Math.random() * maxTier);
+                        eliteSpawn = ELITE_ROSTER[randomTier % ELITE_ROSTER.length];
+                    }
+                    setTimeout(() => {
+                        spawnEnemy(eliteSpawn);
+                        state.pendingSpawns--;
+                    }, i * 800);
+                }
             }
         }
 
         function gameOver() {
             state.active = false;
             state.highScore = Math.max(state.highScore, state.score);
-            UI.goScore.innerText = state.score;
-            UI.goHigh.innerText = state.highScore;
+            setText(UI.goScore, state.score);
+            setText(UI.goHigh, state.highScore);
             gameOverScreen.classList.remove('hidden');
             document.getElementById('game-container').style.filter = "grayscale(100%) blur(5px)";
         }
@@ -1011,15 +1415,20 @@
             ToneSynth.init();
             state.hp = CONFIG.MAX_HP;
             state.score = 0;
+            state.credits = 0;
             state.wave = 1;
             state.grenades = 3;
             state.shieldTime = 0;
             state.jamTime = 0;
+            state.noHeatTime = 0;
             state.missStreak = 0;
             state.projectiles = [];
             state.enemies = [];
             state.particles = [];
             state.powerups = [];
+            state.inventory = [];
+            state.selectedInv = -1;
+            state.pendingSpawns = 0;
             
             state.active = true;
             state.waveActive = false;
@@ -1028,6 +1437,7 @@
             document.getElementById('game-container').style.filter = "none";
             
             updateUI();
+            MusicPlayer.init(); // Reset Music
             startWaveCountdown();
         }
 
@@ -1039,6 +1449,10 @@
                 state.shieldTime -= dt;
                 if (state.shieldTime <= 0) updateUI();
             }
+            if (state.noHeatTime > 0) {
+                state.noHeatTime -= dt;
+                if (state.noHeatTime <= 0) updateUI();
+            }
             if (state.jamTime > 0) {
                 state.jamTime -= dt;
                 if (state.jamTime <= 0) {
@@ -1048,12 +1462,29 @@
                 }
             }
 
-            if (state.enemies.length === 0 && state.waveActive && !state.countingDown) {
+            // Fixed Wave Logic: Check pendingSpawns to prevent premature wave end
+            if (state.enemies.length === 0 && state.pendingSpawns === 0 && state.waveActive && !state.countingDown) {
                 state.waveActive = false;
                 setTimeout(() => {
-                    state.wave++;
+                    // BOSS RUSH SKIP LOGIC
+                    if (Debugger.bossRush) {
+                        // Current wave 5 -> next 10. Current 10 -> next 15.
+                        // Calculate next multiple of 5
+                        let nextBossWave = (Math.floor(state.wave / 5) + 1) * 5;
+                        state.wave = nextBossWave;
+                    } else {
+                        state.wave++;
+                    }
+                    
                     updateUI();
-                    startWaveCountdown();
+                    
+                    // AUTO SHOP LOGIC
+                    // Opens if upcoming wave is a multiple of 10
+                    if (state.wave % 10 === 0) {
+                        openShop();
+                    } else {
+                        startWaveCountdown();
+                    }
                 }, 1000);
             }
             
@@ -1090,12 +1521,13 @@
                     state.enemies.forEach(e => {
                         if (Math.abs(e.x - p.x) < p.width) {
                             if ((p.mode === 'sky' && e.y > 0) || (p.mode === 'sub' && e.y < 0)) {
-                                e.hp -= 5 * dt; // Laser does continuous damage
+                                e.hp -= 5 * dt; 
                                 if (e.hp <= 0) {
                                     e.dead = true;
                                     createParticles(e.x, e.y, e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR));
                                     ToneSynth.play('hit');
                                     state.score += e.isElite ? 500 : 20;
+                                    state.credits += 2;
                                 }
                             }
                         }
@@ -1121,21 +1553,93 @@
                     if (hit || e.dead) return;
                     let dx = p.x - e.x;
                     let dy = p.y - e.y;
-                    if (dx*dx + dy*dy < 4) { 
+                    
+                    // PROXIMITY DODGE LOGIC (Phantom / MegaBoss)
+                    // Check before collision
+                    // Radius: ~80px (screen) -> ~4 units in Math
+                    // User said "increase radius", so let's try distance squared < 64 (radius 8 units)
+                    let distSq = dx*dx + dy*dy;
+                    if (distSq < 64 && !e.hasDodged && (e.eliteName === 'PHANTOM' || e.isMegaBoss)) {
+                        // Check if projectile is moving towards enemy
+                        // dot product of velocity and relative pos
+                        // Projectile moving right (dir=1), enemy is right of projectile (dx > 0) -> moving towards
+                        // Or if dist is decreasing? Simple check: projectile dir matches sign of dx
+                        if ((p.dir > 0 && dx > 0) || (p.dir < 0 && dx < 0)) {
+                             e.hasDodged = true;
+                             // Push back 25 units
+                             let pushDir = e.x > 0 ? 1 : -1;
+                             e.x += pushDir * 25;
+                             createParticles(e.x - (pushDir*25), e.y, 'magenta'); 
+                             ToneSynth.play('warp');
+                             return; // Skip hit check this frame
+                        }
+                    }
+
+                    if (distSq < 4) { // Direct Hit
                         hit = true;
                         e.hp--;
                         ToneSynth.play('hit');
                         
                         if(e.hp <= 0) {
                             e.dead = true;
-                            createParticles(e.x, e.y, e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR));
+                            let col = e.color;
                             state.score += e.isElite ? 500 : 100;
+                            state.credits += e.isElite ? 50 : 10;
+                            
+                            // DIVIDER SPLIT LOGIC
+                            if (e.eliteName === 'DIVIDER') {
+                                // Spawn 2 Mini-Dividers
+                                // They are basically just smaller Dividers or drones
+                                // Let's just spawn standard Drones for now, maybe tinted
+                                for(let k=0; k<2; k++) {
+                                     state.enemies.push({
+                                        x: e.x,
+                                        y: e.y + (k==0?3:-3), // Spread Y
+                                        baseY: e.y + (k==0?3:-3), 
+                                        type: 'drone', // Reuse standard type for simplicity or define 'fragment'
+                                        speed: e.speed * 1.5,
+                                        homing: true, // Fragments home in
+                                        dead: false,
+                                        hp: 2,
+                                        maxHp: 2,
+                                        color: CONFIG.ELITE_COLOR, // Keep parent color
+                                        sides: 3,
+                                        isElite: false
+                                    });
+                                }
+                            }
+                            
+                            // MEGA BOSS SPLIT LOGIC (Prompt: "Splits into 3 elites")
+                            if (e.isMegaBoss) {
+                                state.score += 5000;
+                                state.credits += 250;
+                                // Spawn 3 Random Elites
+                                for(let k=0; k<3; k++) {
+                                    let rndElite = ELITE_ROSTER[k % ELITE_ROSTER.length];
+                                    state.enemies.push({
+                                        x: e.x,
+                                        y: e.y + (k-1)*5, 
+                                        baseY: e.y + (k-1)*5,
+                                        type: 'elite',
+                                        eliteName: rndElite.name,
+                                        speed: rndElite.speed * 1.2,
+                                        homing: false,
+                                        dead: false,
+                                        hp: Math.floor(rndElite.hp / 2), // Weaker version
+                                        maxHp: Math.floor(rndElite.hp / 2),
+                                        isElite: true,
+                                        color: rndElite.color,
+                                        sides: rndElite.sides
+                                    });
+                                }
+                            }
+
+                            createParticles(e.x, e.y, col);
                         } else {
-                            // Hit effect for elite
                             createParticles(e.x, e.y, 'white');
                         }
                         
-                        state.missStreak = Math.max(0, state.missStreak - 2); 
+                        if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); 
                         updateUI();
                     }
                 });
@@ -1149,7 +1653,7 @@
                         state.powerups.splice(idx, 1);
                         createParticles(pup.x, pup.y, 'white');
                         ToneSynth.play('powerup');
-                        state.missStreak = Math.max(0, state.missStreak - 2); 
+                        if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); 
                         if (pup.type === 'hp') {
                             state.hp = Math.min(CONFIG.MAX_HP, state.hp + 1);
                             showMsg("HP RESTORED", CONFIG.SAFE_COLOR);
@@ -1177,13 +1681,24 @@
                     e.y += Math.sin(angle) * e.speed * dt;
                 } else {
                     e.x += (e.x > 0 ? -1 : 1) * e.speed * dt;
-                    e.y += Math.sin(Date.now()/500 + i) * 0.05;
+                    
+                    let time = Date.now() / 500;
+                    let sineOffset = Math.sin(time + Math.abs(e.x)); 
+                    e.y = e.baseY + sineOffset * 2; 
+
+                    if (e.y > 0) { 
+                        e.y = Math.max(2, Math.min(15, e.y));
+                    } else { 
+                        e.y = Math.min(-2, Math.max(-15, e.y));
+                    }
                 }
                 if (Math.abs(e.x) < 2 && Math.abs(e.y) < 2) {
-                    // Elite Collision Logic
                     let dmg = 1;
-                    if(e.isElite) {
-                        dmg = CONFIG.ELITE_DMG;
+                    if(e.isElite || e.isMegaBoss) {
+                        dmg = CONFIG.ELITE_DMG; // 2 Dmg
+                        if (e.isMegaBoss) dmg = 3; // Boss deals 3
+
+                        // INSTANT JAM
                         state.missStreak = CONFIG.JAM_THRESHOLD;
                         state.jamTime = CONFIG.JAM_DURATION;
                         showMsg("SYSTEM CRITICAL - JAMMED", CONFIG.ERR_COLOR);
@@ -1226,6 +1741,17 @@
             ctx.save();
             ctx.translate(sx, sy);
 
+            // --- ZONES (Background Glow) ---
+            const cy0 = toPxY(0);
+            
+            // Sky Zone
+            ctx.fillStyle = 'rgba(14, 165, 233, 0.05)';
+            ctx.fillRect(0, 0, cw, cy0);
+            
+            // Sub Zone
+            ctx.fillStyle = 'rgba(249, 115, 22, 0.05)';
+            ctx.fillRect(0, cy0, cw, ch - cy0);
+
             ctx.strokeStyle = 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 1;
             for(let i=-50; i<=50; i+=10) {
@@ -1242,6 +1768,7 @@
             const bx = toPxX(0);
             const by = toPxY(0);
             
+            // --- PLAYER SHAPE (13-sided) ---
             let baseColor = '#1e293b';
             let strokeColor = state.mode === 'sky' ? CONFIG.SKY_COLOR : CONFIG.SUB_COLOR;
             let shadowColor = 'transparent';
@@ -1264,15 +1791,35 @@
             }
 
             ctx.fillStyle = baseColor;
-            ctx.fillRect(bx - 20, by - 20, 40, 40);
-            
             ctx.shadowColor = shadowColor;
             ctx.shadowBlur = shadowBlur;
             ctx.strokeStyle = strokeColor;
             ctx.lineWidth = 2;
-            ctx.strokeRect(bx - 20, by - 20, 40, 40);
+            
+            // Draw Triskaidecagon (13 sides)
+            drawPoly(ctx, bx, by, 20, 13); 
+            ctx.fill();
+            ctx.stroke();
+            
             ctx.shadowBlur = 0; 
             
+            // --- BUFF TIMERS (RINGS) ---
+            if (state.shieldTime > 0) {
+                ctx.beginPath();
+                ctx.arc(bx, by, 35, 0, (Math.PI*2) * (state.shieldTime/10));
+                ctx.strokeStyle = CONFIG.SAFE_COLOR;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            if (state.noHeatTime > 0) {
+                ctx.beginPath();
+                ctx.arc(bx, by, 40, 0, (Math.PI*2) * (state.noHeatTime/10));
+                ctx.strokeStyle = '#fbbf24'; // Yellow
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Cannon Line
             ctx.beginPath();
             ctx.moveTo(bx, by);
             ctx.lineTo(bx + (state.params.h > 0 ? 15 : -15), by - (state.mode==='sky'?15:-15));
@@ -1297,6 +1844,7 @@
                     ctx.fillRect(lx - 20, toPxY(1), 40, toPxY(0)-toPxY(2));
 
                 } else {
+                    // VERTEX MODE VISUALS
                     const { a, h, k } = calculateTrajectory();
                     const color = state.mode === 'sky' ? CONFIG.SKY_COLOR : CONFIG.SUB_COLOR;
                     ctx.strokeStyle = color;
@@ -1322,6 +1870,7 @@
                     ctx.stroke();
                     ctx.globalAlpha = 1;
                     
+                    // Vertex Marker
                     let vx = toPxX(h);
                     let vy = toPxY(k);
                     ctx.fillStyle = color;
@@ -1333,37 +1882,88 @@
                 let ex = toPxX(e.x);
                 let ey = toPxY(e.y);
                 
-                // Elite Coloring
-                ctx.fillStyle = e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR);
-                ctx.shadowColor = ctx.fillStyle;
+                // Colors
+                let col = e.color;
+                ctx.shadowColor = col;
                 ctx.shadowBlur = 10;
+                ctx.strokeStyle = col;
+                ctx.fillStyle = col;
+
+                ctx.save();
+                ctx.translate(ex, ey);
                 
-                if (e.isElite) {
-                    // Draw Elite Hexagon
-                    ctx.beginPath();
-                    for(let i=0; i<6; i++) {
-                        let angle = (i * Math.PI / 3);
-                        let hx = ex + 12 * Math.cos(angle);
-                        let hy = ey + 12 * Math.sin(angle);
-                        if(i===0) ctx.moveTo(hx, hy);
-                        else ctx.lineTo(hx, hy);
+                // FASTER ROTATION
+                let rotation = Date.now() / 200; 
+                
+                if (e.isElite || e.isMegaBoss) {
+                    ctx.rotate(rotation);
+                    ctx.lineWidth = 3;
+                    // Mega Boss is Bigger
+                    let r = e.isMegaBoss ? 30 : 16;
+                    drawPoly(ctx, 0, 0, r, e.sides); // Elite Size
+                    ctx.stroke();
+                    
+                    // Inner rings for Mega Boss
+                    if(e.isMegaBoss) {
+                        ctx.strokeStyle = '#fff';
+                        ctx.lineWidth = 1;
+                        drawPoly(ctx, 0, 0, 24, e.sides, -rotation*2); 
+                        ctx.stroke();
                     }
-                    ctx.closePath();
+
+                    ctx.rotate(-rotation * 2);
+                    ctx.fillStyle = '#fff';
+                    // Elite Core Pips
+                    ctx.beginPath();
+                    for(let i=0; i<e.sides; i++) {
+                        let a = (Math.PI*2/e.sides)*i;
+                        ctx.moveTo(8*Math.cos(a), 8*Math.sin(a));
+                        ctx.lineTo(4*Math.cos(a), 4*Math.sin(a));
+                    }
+                    ctx.stroke();
+                    
+                    drawPoly(ctx, 0, 0, 6, e.sides);
                     ctx.fill();
                     
-                    // HP Ring
-                    ctx.strokeStyle = 'white';
+                    // Ring
+                    ctx.restore();
+                    ctx.beginPath();
+                    let pct = e.hp / e.maxHp;
+                    let radius = e.isMegaBoss ? 40 : 22;
+                    ctx.arc(ex, ey, radius, -Math.PI/2, (-Math.PI/2) + (Math.PI * 2 * pct));
+                    ctx.strokeStyle = col; 
                     ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(ex, ey, 16, 0, (Math.PI*2) * (e.hp/CONFIG.ELITE_HP));
                     ctx.stroke();
-                } 
-                else if (e.type === 'mole') {
-                    ctx.beginPath();
-                    ctx.moveTo(ex, ey-10); ctx.lineTo(ex+10, ey+10); ctx.lineTo(ex-10, ey+10);
-                    ctx.fill();
                 } else {
-                    ctx.beginPath(); ctx.arc(ex, ey, 8, 0, Math.PI*2); ctx.fill();
+                    // Standard Enemy (Smaller - Reduced Size)
+                    // Scale down radius from 16 to 10
+                    if (e.type === 'mole') {
+                        ctx.rotate(rotation * 2);
+                        ctx.lineWidth = 2;
+                        drawPoly(ctx, 0, 0, 7, 3); // Small Triangle
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath(); ctx.arc(0,0,3,0,Math.PI*2); ctx.fill();
+                    } else {
+                        ctx.rotate(rotation);
+                        ctx.lineWidth = 2;
+                        drawPoly(ctx, 0, 0, 6, 4); // Small Diamond
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath(); ctx.arc(0,0,2,0,Math.PI*2); ctx.fill();
+                    }
+                    
+                    ctx.restore();
+                    
+                    // Smaller Ring
+                    ctx.beginPath();
+                    let pct = e.hp / e.maxHp;
+                    ctx.arc(ex, ey, 10, -Math.PI/2, (-Math.PI/2) + (Math.PI * 2 * pct)); // Tight ring
+                    ctx.strokeStyle = col; 
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                 }
                 
                 if(Debugger.hitbox) {
@@ -1456,12 +2056,15 @@
         
         UI.btnFire.addEventListener('click', fire);
         UI.btnFireLeft.addEventListener('click', fire);
+        UI.btnMusic.addEventListener('click', () => MusicPlayer.toggle());
         
         UI.btnLaserLeft.addEventListener('click', toggleGrenade);
         UI.btnLaserRight.addEventListener('click', toggleGrenade);
         
         UI.btnRestart.addEventListener('click', restartGame);
         UI.btnStart.addEventListener('click', startGame);
+        UI.btnCloseShop.addEventListener('click', closeShop);
+        UI.btnAbility.addEventListener('click', engageAbility);
 
         window.addEventListener('keydown', e => {
             if(e.shiftKey && e.key.toLowerCase() === 'd') Debugger.toggle();
@@ -1481,6 +2084,7 @@
             Debugger.touchAim = e.target.checked;
             updateUI();
         });
+        document.getElementById('dbg-rush').addEventListener('change', e => Debugger.bossRush = e.target.checked);
         document.getElementById('dbg-time').addEventListener('input', e => state.timeScale = parseFloat(e.target.value));
 
     </script>
