@@ -561,7 +561,7 @@
 
     <!-- SCRIPT INJECTION POINT -->
     <script>
-        // --- 1. CONFIGURATION ---
+     // --- 1. CONFIGURATION ---
         const CONFIG = { SCALE: 18, MAX_HP: 5, WAVE_COOLDOWN: 100, SKY_COLOR: '#0ea5e9', SUB_COLOR: '#f97316', ELITE_COLOR: '#a855f7', ERR_COLOR: '#ef4444', SAFE_COLOR: '#22c55e', LASER_DURATION: 2.0, JAM_THRESHOLD: 8, JAM_DURATION: 5.0, HEAT_DECAY_PERCENT: 0.01, ELITE_HP: 5, ELITE_DMG: 1, BOSS_DMG: 2, POISON_TICK_RATE: 2.0, POISON_MAX_DMG: 4, STUN_DURATION: 3.0 };
         
         const WEAPON_DEFS = {
@@ -582,7 +582,17 @@
         };
 
         const ELITE_ROSTER = [
-            { name: "INTERCEPTOR", color: '#4f46e5', hp: 5, speed: 0.8, score: 500, sides: 5, desc: "Jams on impact.", introWave: 5 }, { name: "JUGGERNAUT", color: '#d946ef', hp: 10, speed: 0.4, score: 1000, sides: 6, desc: "Massive Hull.", introWave: 10 }, { name: "PHANTOM", color: '#ec4899', hp: 4, speed: 1.5, score: 800, sides: 7, desc: "Blinks backward.", introWave: 15 }, { name: "DIVIDER", color: '#2dd4bf', hp: 6, speed: 0.6, score: 700, sides: 8, desc: "Splits on death.", introWave: 20 }, { name: "VIPER", color: '#22c55e', hp: 6, speed: 0.7, score: 900, sides: 9, desc: "Fires toxic projectiles.", introWave: 25 }, { name: "STATIC", color: '#facc15', hp: 8, speed: 0.5, score: 1000, sides: 10, desc: "Stun shockwave.", introWave: 30 }, { name: "WEAVER", color: '#cbd5e1', hp: 6, speed: 0.6, score: 1100, sides: 11, desc: "Moves in Sine Wave.", introWave: 35 }, { name: "AEGIS", color: '#2563eb', hp: 8, speed: 0.5, score: 1200, sides: 13, desc: "Shield blocks one hit.", introWave: 40 }, { name: "CONSTRUCT", color: '#b45309', hp: 12, speed: 0.3, score: 1300, sides: 14, desc: "Spawns Drones.", introWave: 45 }, { name: "LEECH", color: '#84cc16', hp: 6, speed: 0.9, score: 1400, sides: 15, desc: "Steals Credits.", introWave: 50 }, { name: "MIMIC", color: '#ffffff', hp: 8, speed: 0.8, score: 1500, sides: 16, desc: "Shapeshifter.", introWave: 55 }
+            { name: "INTERCEPTOR", color: '#4f46e5', hp: 5, speed: 0.8, score: 500, sides: 5, desc: "Jams on impact.", introWave: 5 }, 
+            { name: "JUGGERNAUT", color: '#d946ef', hp: 10, speed: 0.4, score: 1000, sides: 6, desc: "Massive Hull.", introWave: 10 }, 
+            { name: "PHANTOM", color: '#ec4899', hp: 4, speed: 1.5, score: 800, sides: 7, desc: "Blinks backward.", introWave: 15 }, 
+            { name: "DIVIDER", color: '#2dd4bf', hp: 6, speed: 0.6, score: 700, sides: 8, desc: "Splits on death.", introWave: 20 }, 
+            { name: "VIPER", color: '#22c55e', hp: 6, speed: 0.7, score: 900, sides: 9, desc: "Fires toxic projectiles.", introWave: 25 }, 
+            { name: "STATIC", color: '#facc15', hp: 8, speed: 0.5, score: 1000, sides: 10, desc: "Stun shockwave.", introWave: 30 }, 
+            { name: "WEAVER", color: '#cbd5e1', hp: 6, speed: 0.6, score: 1100, sides: 11, desc: "Moves in Sine Wave.", introWave: 35 }, 
+            { name: "AEGIS", color: '#2563eb', hp: 8, speed: 0.5, score: 1200, sides: 13, desc: "Shield blocks one hit.", introWave: 40 }, 
+            { name: "CONSTRUCT", color: '#b45309', hp: 12, speed: 0.3, score: 1300, sides: 14, desc: "Spawns Drones.", introWave: 45 }, 
+            { name: "LEECH", color: '#84cc16', hp: 6, speed: 0.9, score: 1400, sides: 15, desc: "Steals Credits.", introWave: 50 }, 
+            { name: "MIMIC", color: '#ffffff', hp: 8, speed: 0.8, score: 1500, sides: 16, desc: "Shapeshifter.", introWave: 55 }
         ];
 
         const GAME_INTEL = {
@@ -598,16 +608,28 @@
 
         // --- GLOBAL VARIABLES ---
         let state = { maxHp: CONFIG.MAX_HP, hp: CONFIG.MAX_HP, wave: 1, score: 0, credits: 0, highScore: 0, grenades: 3, mode: 'sky', weapon: 'parabola', shieldTime: 0, jamTime: 0, noHeatTime: 0, missStreak: 0, coolingRate: 1.0, heatDecayMulti: 1.0, stunTime: 0, poison: { active: false, timer: 0, damageTaken: 0 }, badges: [], activeBuffs: { scavenger: 0, turret: 0, cryo_stab: 0, reactive: 0, focus_fire: 0, shield_boost: 0, regen_mod: 0, coolant: 0 }, perms: { cool_up: 0, dmg_up: 0, drone_count: 0 }, weapons: ['standard'], selectedWeaponIdx: 0, regenTimer: 0, turretTarget: null, turretCooldown: 0, droneAngle: 0, droneCooldowns: [0,0,0], rareSeed: 0, params: { h: 15, a: 0.05, gx: 15 }, projectiles: [], enemyProjectiles: [], enemies: [], powerups: [], particles: [], inventory: [], selectedInv: -1, gravityFields: [], droneBeams: [], lastTime: 0, timeScale: 1.0, shake: 0, active: false, waveActive: false, countingDown: false, pendingSpawns: 0 };
-        let UI = {}; // Populated in window.onload
+        let UI = {}; 
         let canvas, ctx, cw, ch, ox, oy;
         
         const Debugger = { open: false, god: false, hitbox: false, snap: false, touchAim: true, bossRush: false, toggle() { this.open = !this.open; document.getElementById('debug-menu').classList.toggle('hidden', !this.open); document.getElementById('debug-tag').classList.toggle('hidden', !this.open && !this.god && !this.snap && !this.touchAim && !this.bossRush); document.getElementById('rush-tag').classList.toggle('hidden', !this.bossRush); } };
         const ToneSynth = { ctx: null, init() { try { if(!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } if(this.ctx.state === 'suspended') { this.ctx.resume().catch(e => {}); } } catch(e){} }, play(type) { if(!this.ctx) return; try { const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.connect(gain); gain.connect(this.ctx.destination); const t = this.ctx.currentTime; if (type === 'count') { osc.type = 'triangle'; osc.frequency.setValueAtTime(600, t); osc.frequency.exponentialRampToValueAtTime(800, t + 0.05); gain.gain.setValueAtTime(0.2, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1); osc.start(t); osc.stop(t + 0.1); } else if (type === 'shoot') { osc.type = 'square'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(100, t + 0.15); gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15); osc.start(t); osc.stop(t + 0.15); } else if (type === 'hit') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(10, t + 0.2); gain.gain.setValueAtTime(0.2, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2); osc.start(t); osc.stop(t + 0.2); } else if (type === 'explode') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(10, t + 0.4); gain.gain.setValueAtTime(0.4, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4); osc.start(t); osc.stop(t + 0.4); } else if (type === 'jam') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, t); gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.1); osc.start(t); osc.stop(t + 0.1); } else if (type === 'warning') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(100, t + 0.3); gain.gain.setValueAtTime(0.2, t); gain.gain.linearRampToValueAtTime(0, t + 0.3); osc.start(t); osc.stop(t + 0.3); } else if (type === 'powerup') { osc.type = 'sine'; osc.frequency.setValueAtTime(1200, t); osc.frequency.setValueAtTime(1800, t + 0.1); gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.4); osc.start(t); osc.stop(t + 0.4); } else if (type === 'turret_shoot') { osc.type = 'triangle'; osc.frequency.setValueAtTime(600, t); osc.frequency.exponentialRampToValueAtTime(100, t + 0.1); gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1); osc.start(t); osc.stop(t + 0.1); } else if (type === 'smartbomb') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(50, t); osc.frequency.linearRampToValueAtTime(20, t + 1.0); gain.gain.setValueAtTime(0.5, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 1.0); osc.start(t); osc.stop(t + 1.0); } else if (type === 'stun') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, t); osc.frequency.linearRampToValueAtTime(50, t + 0.5); gain.gain.setValueAtTime(0.3, t); gain.gain.linearRampToValueAtTime(0, t + 0.5); osc.start(t); osc.stop(t + 0.5); } else if (type === 'shield_break') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, t); osc.frequency.linearRampToValueAtTime(200, t + 0.3); gain.gain.setValueAtTime(0.2, t); gain.gain.linearRampToValueAtTime(0, t + 0.3); osc.start(t); osc.stop(t + 0.3); } } catch(e){} } };
         const MusicPlayer = { currentTrackNum: 1, audio: null, isPlaying: true, volume: 0.2, init() { this.loadTrack(1); }, checkTrack(wave) { const t = Math.ceil(Math.max(1, wave) / 10); if(t !== this.currentTrackNum) this.loadTrack(t); }, loadTrack(num) { this.currentTrackNum = num; try { this.audio = new Audio(`bgmusic/Track ${num}.mp3`); this.audio.volume = this.volume; this.audio.loop = true; if(this.isPlaying) this.audio.play().catch(e=>{}); } catch(e) {} }, setVolume(val) { this.volume = val; if(this.audio) this.audio.volume = val; }, toggle() { if(!this.audio) { this.isPlaying = !this.isPlaying; this.updateBtn(); return; } if(this.isPlaying) { this.audio.pause(); this.isPlaying = false; } else { this.audio.volume = this.volume; this.audio.play().catch(()=>{}); this.isPlaying = true; } this.updateBtn(); }, updateBtn() { const btn = document.getElementById('btn-music'); if(this.isPlaying) { btn.classList.add('text-green-400'); btn.classList.remove('text-slate-400'); } else { btn.classList.remove('text-green-400'); btn.classList.add('text-slate-400'); } }, startPlayback() { if(this.isPlaying && this.audio) { const playPromise = this.audio.play(); if (playPromise !== undefined) { playPromise.catch(error => {}); } document.getElementById('btn-music').classList.add('text-green-400'); } } };
 
-        // --- HELPER FUNCTIONS ---
+        // --- DOM & HELPERS ---
+        function resize() {
+            const container = document.getElementById('game-container');
+            if(container) {
+                canvas = document.getElementById('gameCanvas');
+                ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1; cw = container.clientWidth; ch = container.clientHeight;
+                canvas.width = cw * dpr; canvas.height = ch * dpr; ctx.scale(dpr, dpr); canvas.style.width = `${cw}px`; canvas.style.height = `${ch}px`;
+                ox = cw / 2; oy = ch / 2; CONFIG.SCALE = Math.max(8, Math.min(30, cw / (cw < 600 ? 60 : 80)));
+            }
+        }
+        const toPxX = (x) => ox + x * CONFIG.SCALE; const toPxY = (y) => oy - y * CONFIG.SCALE; const toMathX = (px) => (px - ox) / CONFIG.SCALE; const toMathY = (py) => (oy - py) / CONFIG.SCALE; 
+
         function setText(el, text) { if(el) el.innerText = text; }
-        function showMsg(txt, col) { UI.msg.innerHTML = txt; UI.msg.style.color = col || 'white'; UI.msg.style.opacity = 1; setTimeout(() => UI.msg.style.opacity = 0, 3000); }
+        function showMsg(txt, col) { const msg = document.getElementById('message-display'); msg.innerHTML = txt; msg.style.color = col || 'white'; msg.style.opacity = 1; setTimeout(() => msg.style.opacity = 0, 3000); }
         function calculateTrajectory() { let { h, a } = state.params; let finalA = state.mode === 'sky' ? -a : a; let k = -finalA * (h * h); if (state.mode === 'sky') k = Math.max(0.1, k); else k = Math.min(-0.1, k); return { a: finalA, h, k }; }
         function checkJam() { if (state.missStreak >= CONFIG.JAM_THRESHOLD && state.noHeatTime <= 0) { state.jamTime = CONFIG.JAM_DURATION; state.missStreak = CONFIG.JAM_THRESHOLD; showMsg("SYSTEM OVERHEAT - JAMMED", CONFIG.ERR_COLOR); ToneSynth.play('jam'); updateUI(); } }
         function setMode(m) { ToneSynth.init(); state.mode = m; updateUI(); }
@@ -615,136 +637,626 @@
         function createParticles(x, y, col, count=8) { for(let i=0; i<count; i++) { state.particles.push({ x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, col, life: 1, type: 'basic' }); } }
         function createShockwave(x, y, col) { for(let i=0; i<20; i++) { let speed = 10 + Math.random() * 20; let angle = Math.random() * Math.PI * 2; state.particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, col, life: 1.5, type: 'basic' }); } state.particles.push({ x, y, vx:0, vy:0, col, life: 0.5, type: 'shock', size: 5 }); }
         function drawPoly(ctx, x, y, r, sides, rotation = 0) { ctx.beginPath(); for (let i = 0; i < sides; i++) { const ang = (Math.PI * 2 / sides) * i + rotation; const px = x + r * Math.cos(ang); const py = y + r * Math.sin(ang); if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); } ctx.closePath(); }
-        function drawEliteVisuals(ctx, e, r) { let time = Date.now() / 200; drawPoly(ctx, 0, 0, r, e.sides); ctx.stroke(); if (e.eliteName === 'AEGIS' && e.hasShield) { ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r + 8, 0, Math.PI * 2); ctx.stroke(); } ctx.rotate(-time * 2); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0,0,3,0,Math.PI*2); ctx.fill(); }
-        function resize() { const container = document.getElementById('game-container'); if(container) { const dpr = window.devicePixelRatio || 1; cw = container.clientWidth; ch = container.clientHeight; canvas.width = cw * dpr; canvas.height = ch * dpr; ctx.scale(dpr, dpr); canvas.style.width = `${cw}px`; canvas.style.height = `${ch}px`; ox = cw / 2; oy = ch / 2; CONFIG.SCALE = Math.max(8, Math.min(30, cw / (cw < 600 ? 60 : 80))); } }
-        const toPxX = (x) => ox + x * CONFIG.SCALE; const toPxY = (y) => oy - y * CONFIG.SCALE; const toMathX = (px) => (px - ox) / CONFIG.SCALE; const toMathY = (py) => (oy - py) / CONFIG.SCALE; 
-        function attachTouch(id, fn) { const el = document.getElementById(id); if(el) { el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); fn(); }, {passive: false}); el.addEventListener('click', fn); } }
-        function syncParamsFromInput() { state.params.h = parseFloat(UI.inH.value); state.params.a = parseFloat(UI.inA.value); state.params.gx = parseFloat(UI.inGx.value); updateUI(); }
         
-        // --- 3. CORE LOGIC ---
-        function updateUI() {
-            setText(UI.lblH, state.params.h.toFixed(1)); setText(UI.lblA, state.params.a.toFixed(3)); setText(UI.lblGx, state.params.gx.toFixed(0));
-            if(UI.inH && document.activeElement !== UI.inH) UI.inH.value = state.params.h; if(UI.inA && document.activeElement !== UI.inA) UI.inA.value = state.params.a; if(UI.inGx && document.activeElement !== UI.inGx) UI.inGx.value = state.params.gx;
-            
-            const { a, h, k } = calculateTrajectory(); const signH = h >= 0 ? '-' : '+'; const valH = Math.abs(h).toFixed(1); const signK = k >= 0 ? '+' : ''; const valK = k.toFixed(1);
-            UI.eqDisplay.innerHTML = `y = ${a.toFixed(2)}(x ${signH} ${valH})² ${signK}${valK}`;
-            const isSky = state.mode === 'sky'; const isGrenade = state.weapon === 'grenade'; const theme = isGrenade ? 'theme-grenade' : (isSky ? 'theme-sky' : 'theme-sub');
-            UI.inH.className = theme + ' h-3 md:h-4'; UI.inA.className = theme + ' h-3 md:h-4'; UI.inGx.className = theme + ' h-4';
-            const fireBtnClass = "flex-1 font-black text-[10px] md:text-xl tracking-widest rounded-lg transition-all border-b-4 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1";
-            let txt = "FIRE"; let style = "";
-            if (isGrenade) { if(UI.ctrlParabola) UI.ctrlParabola.classList.add('hidden'); if(UI.ctrlGrenade) UI.ctrlGrenade.classList.remove('hidden'); if(UI.ctrlGrenade) UI.ctrlGrenade.classList.add('flex'); style = `${fireBtnClass} bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] border-red-800`; txt = "DEPLOY"; } 
-            else { if(UI.ctrlParabola) UI.ctrlParabola.classList.remove('hidden'); if(UI.ctrlGrenade) UI.ctrlGrenade.classList.add('hidden'); if(UI.ctrlGrenade) UI.ctrlGrenade.classList.remove('flex'); if (state.stunTime > 0) { style = "flex-1 bg-yellow-900/50 text-yellow-500 cursor-not-allowed font-black text-[10px] md:text-xl tracking-widest rounded-lg border border-yellow-900 flex flex-col items-center justify-center gap-1"; txt = "OFFLINE"; } else if (state.jamTime > 0) { style = "flex-1 bg-red-900/50 text-red-500 cursor-not-allowed font-black text-[10px] md:text-xl tracking-widest rounded-lg border border-red-900 flex flex-col items-center justify-center gap-1"; txt = "JAMMED"; } else if (isSky) { style = `${fireBtnClass} bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white shadow-[0_0_20px_rgba(14,165,233,0.4)] border-sky-800`; } else { style = `${fireBtnClass} bg-orange-600 hover:bg-orange-500 active:bg-orange-400 text-white shadow-[0_0_20px_rgba(249,115,22,0.4)] border-orange-800`; } }
-            if(UI.btnFire) { UI.btnFire.className = style; UI.btnFire.querySelector('span').innerText = txt; } if(UI.btnFireLeft) { UI.btnFireLeft.className = style; UI.btnFireLeft.querySelector('span').innerText = txt; }
-            UI.grenadeCnts.forEach(el => el.innerText = state.grenades); setText(UI.score, state.score); setText(UI.credits, `¢${state.credits}`); setText(UI.wave, state.wave);
-            if(UI.hpBar) { UI.hpBar.innerHTML = ''; let blocks = Math.ceil(state.hp); for(let i=0; i<state.maxHp; i++) { const isActive = i < blocks; const d = document.createElement('div'); let colorClass = 'bg-slate-800 border border-slate-700'; if (isActive) { if (state.shieldTime > 0) colorClass = 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'; else if (state.hp <= 1) colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse'; else colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'; } d.className = `w-3 h-6 rounded-sm transition-all duration-300 ${colorClass}`; UI.hpBar.appendChild(d); } }
-            if(UI.shieldStatus) UI.shieldStatus.classList.toggle('hidden', state.shieldTime <= 0); if(UI.jamOverlay) UI.jamOverlay.classList.toggle('hidden', state.jamTime <= 0); if(UI.jamWarning) UI.jamWarning.classList.toggle('hidden', state.jamTime <= 0); if(UI.stunWarning) UI.stunWarning.classList.toggle('hidden', state.stunTime <= 0); if(UI.poisonOverlay) UI.poisonOverlay.classList.toggle('hidden', !state.poison.active);
-            let heatPct = Math.min(100, (state.missStreak / CONFIG.JAM_THRESHOLD) * 100); if(state.jamTime > 0) heatPct = 100; if(state.noHeatTime > 0) heatPct = 0; if(UI.heatBar) { UI.heatBar.style.width = `${heatPct}%`; UI.heatBar.className = `h-full transition-all duration-200 ${heatPct > 70 ? 'bg-red-500' : (state.noHeatTime > 0 ? 'bg-blue-400' : (heatPct > 40 ? 'bg-yellow-500' : 'bg-slate-500'))}`; }
-            setText(UI.heatText, state.noHeatTime > 0 ? "INF" : (Math.floor(heatPct) + "%"));
-            renderInventory(); if(UI.touchTag) UI.touchTag.classList.toggle('hidden', !Debugger.touchAim); document.getElementById('rush-tag').classList.toggle('hidden', !Debugger.bossRush);
+        function drawEliteVisuals(ctx, e, r) {
+            let time = Date.now() / 200; drawPoly(ctx, 0, 0, r, e.sides); ctx.stroke();
+            if (e.eliteName === 'AEGIS' && e.hasShield) { ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r + 8, 0, Math.PI * 2); ctx.stroke(); }
+            ctx.rotate(-time * 2); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0,0,3,0,Math.PI*2); ctx.fill();
+        }
+        
+        function initStartScreen() {
+            const dbgTouch = document.getElementById('dbg-touch');
+            if(dbgTouch) dbgTouch.checked = Debugger.touchAim;
+            const dbgRush = document.getElementById('dbg-rush');
+            if(dbgRush) dbgRush.checked = Debugger.bossRush;
         }
 
-        function openShop() { if (state.hp <= 0) return; state.active = false; setText(UI.shopCredits, `CREDITS: ¢${state.credits}`); if(UI.shopWaveTitle) setText(UI.shopWaveTitle, `PREPARING FOR WAVE ${state.wave}`); renderShopItems(); document.getElementById('shop-screen').classList.remove('hidden'); }
-        function closeShop() { state.rareSeed++; document.getElementById('shop-screen').classList.add('hidden'); state.active = true; resize(); startWaveCountdown(); }
+        function syncParamsFromInput() {
+             state.params.h = parseFloat(UI.inH.value);
+             state.params.a = parseFloat(UI.inA.value);
+             state.params.gx = parseFloat(UI.inGx.value);
+             updateUI();
+        }
+        
+        // --- CORE FUNCTIONS (Hoist) ---
+        function updateUI() {
+            setText(UI.lblH, state.params.h.toFixed(1)); setText(UI.lblA, state.params.a.toFixed(3)); setText(UI.lblGx, state.params.gx.toFixed(0));
+            if(UI.inH && document.activeElement !== UI.inH) UI.inH.value = state.params.h;
+            if(UI.inA && document.activeElement !== UI.inA) UI.inA.value = state.params.a;
+            if(UI.inGx && document.activeElement !== UI.inGx) UI.inGx.value = state.params.gx;
+            const { a, h, k } = calculateTrajectory();
+            const signH = h >= 0 ? '-' : '+'; const valH = Math.abs(h).toFixed(1);
+            const signK = k >= 0 ? '+' : ''; const valK = k.toFixed(1);
+            if(UI.eqDisplay) UI.eqDisplay.innerHTML = `y = ${a.toFixed(2)}(x ${signH} ${valH})² ${signK}${valK}`;
+            const isSky = state.mode === 'sky'; const isGrenade = state.weapon === 'grenade';
+            const theme = isGrenade ? 'theme-grenade' : (isSky ? 'theme-sky' : 'theme-sub');
+            if(UI.inH) UI.inH.className = theme + ' h-3 md:h-4'; if(UI.inA) UI.inA.className = theme + ' h-3 md:h-4'; if(UI.inGx) UI.inGx.className = theme + ' h-4';
+            const fireBtnClass = "flex-1 font-black text-[10px] md:text-xl tracking-widest rounded-lg transition-all border-b-4 active:border-b-0 active:translate-y-1 flex flex-col items-center justify-center gap-1";
+            let txt = "FIRE"; let style = "";
+            if (isGrenade) {
+                if(UI.ctrlParabola) UI.ctrlParabola.classList.add('hidden');
+                if(UI.ctrlGrenade) UI.ctrlGrenade.classList.remove('hidden');
+                if(UI.ctrlGrenade) UI.ctrlGrenade.classList.add('flex');
+                style = `${fireBtnClass} bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] border-red-800`;
+                txt = "DEPLOY";
+            } else {
+                if(UI.ctrlParabola) UI.ctrlParabola.classList.remove('hidden');
+                if(UI.ctrlGrenade) UI.ctrlGrenade.classList.add('hidden');
+                if(UI.ctrlGrenade) UI.ctrlGrenade.classList.remove('flex');
+                
+                if (state.stunTime > 0) {
+                     style = "flex-1 bg-yellow-900/50 text-yellow-500 cursor-not-allowed font-black text-[10px] md:text-xl tracking-widest rounded-lg border border-yellow-900 flex flex-col items-center justify-center gap-1";
+                     txt = "OFFLINE";
+                } else if (state.jamTime > 0) {
+                     style = "flex-1 bg-red-900/50 text-red-500 cursor-not-allowed font-black text-[10px] md:text-xl tracking-widest rounded-lg border border-red-900 flex flex-col items-center justify-center gap-1";
+                     txt = "JAMMED";
+                } else if (isSky) {
+                    style = `${fireBtnClass} bg-sky-600 hover:bg-sky-500 active:bg-sky-400 text-white shadow-[0_0_20px_rgba(14,165,233,0.4)] border-sky-800`;
+                } else {
+                    style = `${fireBtnClass} bg-orange-600 hover:bg-orange-500 active:bg-orange-400 text-white shadow-[0_0_20px_rgba(249,115,22,0.4)] border-orange-800`;
+                }
+            }
+            if(UI.btnFire) { UI.btnFire.className = style; UI.btnFire.querySelector('span').innerText = txt; }
+            if(UI.btnFireLeft) { UI.btnFireLeft.className = style; UI.btnFireLeft.querySelector('span').innerText = txt; }
+            
+            UI.grenadeCnts.forEach(el => el.innerText = state.grenades);
+            setText(UI.score, state.score); setText(UI.credits, `¢${state.credits}`); setText(UI.wave, state.wave);
+            
+            if(UI.hpBar) {
+                UI.hpBar.innerHTML = '';
+                let blocks = Math.ceil(state.hp);
+                for(let i=0; i<state.maxHp; i++) {
+                    const isActive = i < blocks;
+                    const d = document.createElement('div');
+                    let colorClass = 'bg-slate-800 border border-slate-700';
+                    if (isActive) {
+                         if (state.shieldTime > 0) colorClass = 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]';
+                         else if (state.hp <= 1) colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse';
+                         else colorClass = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]';
+                    }
+                    d.className = `w-3 h-6 rounded-sm transition-all duration-300 ${colorClass}`;
+                    UI.hpBar.appendChild(d);
+                }
+            }
+            
+            if(UI.shieldStatus) UI.shieldStatus.classList.toggle('hidden', state.shieldTime <= 0);
+            if(UI.jamOverlay) UI.jamOverlay.classList.toggle('hidden', state.jamTime <= 0);
+            if(UI.jamWarning) UI.jamWarning.classList.toggle('hidden', state.jamTime <= 0);
+            if(UI.stunWarning) UI.stunWarning.classList.toggle('hidden', state.stunTime <= 0);
+            if(UI.poisonOverlay) UI.poisonOverlay.classList.toggle('hidden', !state.poison.active);
+            
+            let heatPct = Math.min(100, (state.missStreak / CONFIG.JAM_THRESHOLD) * 100);
+            if(state.jamTime > 0) heatPct = 100;
+            if(state.noHeatTime > 0) heatPct = 0; 
+            
+            if(UI.heatBar) {
+                UI.heatBar.style.width = `${heatPct}%`;
+                UI.heatBar.className = `h-full transition-all duration-200 ${heatPct > 70 ? 'bg-red-500' : (state.noHeatTime > 0 ? 'bg-blue-400' : (heatPct > 40 ? 'bg-yellow-500' : 'bg-slate-500'))}`;
+            }
+            setText(UI.heatText, state.noHeatTime > 0 ? "INF" : (Math.floor(heatPct) + "%"));
+            
+            renderInventory();
+            if(UI.touchTag) UI.touchTag.classList.toggle('hidden', !Debugger.touchAim);
+            document.getElementById('rush-tag').classList.toggle('hidden', !Debugger.bossRush);
+        }
+
+        function openShop() {
+            if (state.hp <= 0) return;
+            state.active = false; 
+            setText(UI.shopCredits, `CREDITS: ¢${state.credits}`);
+            if(UI.shopWaveTitle) setText(UI.shopWaveTitle, `PREPARING FOR WAVE ${state.wave}`);
+            renderShopItems();
+            document.getElementById('shop-screen').classList.remove('hidden');
+        }
+
+        function closeShop() {
+            state.rareSeed++;
+            document.getElementById('shop-screen').classList.add('hidden');
+            state.active = true;
+            resize(); 
+            startWaveCountdown();
+        }
 
         function renderShopItems() {
-            const container = document.getElementById('shop-list'); container.innerHTML = '';
-            // Flatten pools into one list for simplicity or render separately. Logic implies separation.
-            // Simplified renderer for single container:
-            const allItems = [...SHOP_POOLS.common, ...(state.wave % 2 !== 0 ? SHOP_POOLS.uncommonA : SHOP_POOLS.uncommonB), ...SHOP_POOLS.weapons, SHOP_POOLS.rare[state.rareSeed % SHOP_POOLS.rare.length]];
+            const container = document.getElementById('shop-list');
+            container.innerHTML = '';
+            
+            const allItems = [
+                ...SHOP_POOLS.common,
+                ...(state.wave % 2 !== 0 ? SHOP_POOLS.uncommonA : SHOP_POOLS.uncommonB),
+                ...SHOP_POOLS.weapons,
+                SHOP_POOLS.rare[state.rareSeed % SHOP_POOLS.rare.length]
+            ];
+
             allItems.forEach(item => {
                 if (item.type === 'perm' && item.id === 'comp_drone' && state.perms.drone_count >= 3) return;
                 if (item.type === 'perm' && item.id !== 'comp_drone' && state.badges.find(b => b.id === item.id)) return; 
-                const div = document.createElement('div'); div.className = "flex justify-between items-center p-2 bg-slate-800 rounded hover:bg-slate-700 transition mb-2 border border-slate-700";
-                let cost = item.cost; if(Debugger.bossRush) cost = 0; const canAfford = state.credits >= cost;
-                let btnText = `¢${cost}`; if(item.type === 'weapon' && state.weapons.length >= 3) btnText = "REPLACE?";
-                div.innerHTML = `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded bg-slate-900 border border-slate-600 flex items-center justify-center text-lg">${item.icon || '?'}</div><div><div class="text-xs font-bold text-white">${item.name}</div><div class="text-[9px] text-slate-400">${item.desc}</div></div></div><button class="px-2 py-1 ${canAfford ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-600 cursor-not-allowed opacity-50'} text-white text-[10px] font-bold rounded">${btnText}</button>`;
-                const btn = div.querySelector('button'); if(canAfford) { btn.onclick = () => buyItem(item, cost); } container.appendChild(div);
+                
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center p-2 bg-slate-800 rounded hover:bg-slate-700 transition mb-2 border border-slate-700";
+                
+                let cost = item.cost;
+                if(Debugger.bossRush) cost = 0;
+                const canAfford = state.credits >= cost;
+                
+                let btnText = `¢${cost}`;
+                if(item.type === 'weapon' && state.weapons.length >= 3) btnText = "REPLACE?";
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded bg-slate-900 border border-slate-600 flex items-center justify-center text-lg">${item.icon || '?'}</div>
+                        <div>
+                            <div class="text-xs font-bold text-white">${item.name}</div>
+                            <div class="text-[9px] text-slate-400">${item.desc}</div>
+                        </div>
+                    </div>
+                    <button class="px-2 py-1 ${canAfford ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-slate-600 cursor-not-allowed opacity-50'} text-white text-[10px] font-bold rounded">${btnText}</button>
+                `;
+                
+                const btn = div.querySelector('button');
+                if(canAfford) {
+                    btn.onclick = () => buyItem(item, cost);
+                }
+                container.appendChild(div);
             });
         }
 
         function buyItem(item, cost) {
             if (state.credits >= cost) {
-                if(item.type === 'consumable' || item.type === 'buff') { if(state.inventory.length >= 3) { ToneSynth.play('warning'); return; } state.credits -= cost; state.inventory.push(item.id); } 
-                else if (item.type === 'perm') { state.credits -= cost; applyPermUpgrade(item.id); } 
-                else if (item.type === 'weapon') { if(state.weapons.length < 3) { state.credits -= cost; state.weapons.push(item.def.id); } else { state.credits -= cost; state.weapons[state.selectedWeaponIdx] = item.def.id; } }
-                setText(UI.shopCredits, `CREDITS: ¢${state.credits}`); ToneSynth.play('buy'); renderShopItems(); updateUI(); renderBadges();
-            } else { ToneSynth.play('warning'); }
+                if(item.type === 'consumable' || item.type === 'buff') {
+                    if(state.inventory.length >= 3) {
+                         ToneSynth.play('warning');
+                         return;
+                    }
+                    state.credits -= cost;
+                    state.inventory.push(item.id);
+                } else if (item.type === 'perm') {
+                     state.credits -= cost;
+                     applyPermUpgrade(item.id);
+                } else if (item.type === 'weapon') {
+                    if(state.weapons.length < 3) {
+                        state.credits -= cost;
+                        state.weapons.push(item.def.id);
+                    } else {
+                        state.credits -= cost;
+                        state.weapons[state.selectedWeaponIdx] = item.def.id;
+                    }
+                }
+                setText(UI.shopCredits, `CREDITS: ¢${state.credits}`);
+                ToneSynth.play('buy');
+                renderShopItems(); 
+                updateUI();
+                renderBadges();
+            } else {
+                ToneSynth.play('warning');
+            }
         }
 
         function applyPermUpgrade(id) {
-            if (id === 'hull_up') { state.maxHp += 1; state.hp += 1; } else if (id === 'cool_up') { state.perms.cool_up++; state.heatDecayMulti += 0.2; } else if (id === 'dmg_up') { state.perms.dmg_up++; } else if (id === 'comp_drone') { state.perms.drone_count++; }
+            if (id === 'hull_up') { state.maxHp += 1; state.hp += 1; } 
+            else if (id === 'cool_up') { state.perms.cool_up++; state.heatDecayMulti += 0.2; } 
+            else if (id === 'dmg_up') { state.perms.dmg_up++; } 
+            else if (id === 'comp_drone') { state.perms.drone_count++; }
+            
             showMsg("SYSTEM UPGRADED", CONFIG.SAFE_COLOR);
-            if (id !== 'comp_drone' && !state.badges.find(b => b.id === id)) { state.badges.push({ id: id, icon: 'U', type: 'perm' }); } 
-            else if (id === 'comp_drone') { let b = state.badges.find(b => b.id === id); if(!b) state.badges.push({ id: id, icon: '🛸', type: 'perm' }); }
+            if (id !== 'comp_drone' && !state.badges.find(b => b.id === id)) {
+                state.badges.push({ id: id, icon: 'U', type: 'perm' });
+            } else if (id === 'comp_drone') {
+                let b = state.badges.find(b => b.id === id);
+                if(!b) state.badges.push({ id: id, icon: '🛸', type: 'perm' });
+            }
         }
 
         function activateBuff(itemId) {
             let poolItem = [...SHOP_POOLS.common, ...SHOP_POOLS.uncommonA, ...SHOP_POOLS.uncommonB].find(i => i.id === itemId);
-            let duration = poolItem ? poolItem.duration : 1; let icon = poolItem ? poolItem.icon : '?'; let name = poolItem ? poolItem.name : 'BUFF';
-            state.activeBuffs[itemId] = duration; showMsg(`${name} ACTIVE`, "cyan");
+            let duration = poolItem ? poolItem.duration : 1;
+            let icon = poolItem ? poolItem.icon : '?';
+            let name = poolItem ? poolItem.name : 'BUFF';
+
+            state.activeBuffs[itemId] = duration;
+            showMsg(`${name} ACTIVE`, "cyan");
+            
             if (itemId === 'shield_boost') state.shieldTime = 999;
             if (itemId === 'coolant') state.heatDecayMulti += 2;
             if (itemId === 'regen_mod') state.regenTimer = 0;
-            if (!state.badges.find(b => b.id === itemId)) { state.badges.push({ id: itemId, icon: icon, type: 'buff' }); }
+
+            if (!state.badges.find(b => b.id === itemId)) {
+                state.badges.push({ id: itemId, icon: icon, type: 'buff' });
+            }
         }
 
         function renderInventory() {
-            if(!UI.invBar) return; UI.invBar.innerHTML = '';
+            if(!UI.invBar) return;
+            UI.invBar.innerHTML = '';
             for(let i=0; i<3; i++) {
-                const itemId = state.inventory[i]; const slot = document.createElement('div'); slot.className = `inv-slot rounded ${state.selectedInv === i ? 'selected' : ''}`;
-                if(itemId) { let symbol = '?'; let col = 'white'; let itemDef = [...SHOP_POOLS.common, ...SHOP_POOLS.uncommonA, ...SHOP_POOLS.uncommonB].find(x => x.id === itemId); if(itemDef) { symbol = itemDef.icon; col = 'white'; } if (itemId === 'smart_bomb') { symbol='💣'; col='red'; } slot.innerText = symbol; slot.style.color = col; slot.onclick = () => { state.selectedInv = i; updateUI(); }; } else { slot.innerHTML = '<span class="inv-empty">.</span>'; } UI.invBar.appendChild(slot);
+                const itemId = state.inventory[i];
+                const slot = document.createElement('div');
+                slot.className = `inv-slot rounded ${state.selectedInv === i ? 'selected' : ''}`;
+                
+                if(itemId) {
+                    let symbol = '?';
+                    let col = 'white';
+                    let itemDef = [...SHOP_POOLS.common, ...SHOP_POOLS.uncommonA, ...SHOP_POOLS.uncommonB].find(x => x.id === itemId);
+                    if(itemDef) { symbol = itemDef.icon; col = 'white'; } 
+                    if (itemId === 'smart_bomb') { symbol='💣'; col='red'; }
+                    
+                    slot.innerText = symbol;
+                    slot.style.color = col;
+                    slot.onclick = () => {
+                        state.selectedInv = i;
+                        updateUI();
+                    };
+                } else {
+                    slot.innerHTML = '<span class="inv-empty">.</span>';
+                }
+                UI.invBar.appendChild(slot);
             }
-            if(UI.btnAbility) { const hasSel = state.selectedInv >= 0 && state.inventory[state.selectedInv]; UI.btnAbility.disabled = !hasSel; UI.btnAbility.classList.toggle('opacity-50', !hasSel); UI.btnAbility.classList.toggle('cursor-not-allowed', !hasSel); }
-            if(!UI.weaponBar) return; UI.weaponBar.innerHTML = '';
-            for(let i=0; i<3; i++) { const wpnId = state.weapons[i]; const slot = document.createElement('div'); slot.className = `wep-slot rounded ${state.selectedWeaponIdx === i ? 'selected' : ''}`; if(wpnId) { const def = WEAPON_DEFS[wpnId]; slot.innerHTML = `<span style="color:${def.color}">${def.icon}</span><span class="subscript">${def.sub || ''}</span>`; slot.onclick = () => { state.selectedWeaponIdx = i; updateUI(); }; } else { slot.innerHTML = '<span class="inv-empty">.</span>'; } UI.weaponBar.appendChild(slot); }
+            
+            if(UI.btnAbility) {
+                const hasSel = state.selectedInv >= 0 && state.inventory[state.selectedInv];
+                UI.btnAbility.disabled = !hasSel;
+                UI.btnAbility.classList.toggle('opacity-50', !hasSel);
+                UI.btnAbility.classList.toggle('cursor-not-allowed', !hasSel);
+            }
+            
+            if(!UI.weaponBar) return;
+            UI.weaponBar.innerHTML = '';
+            for(let i=0; i<3; i++) {
+                const wpnId = state.weapons[i];
+                const slot = document.createElement('div');
+                slot.className = `wep-slot rounded ${state.selectedWeaponIdx === i ? 'selected' : ''}`;
+                
+                if(wpnId) {
+                    const def = WEAPON_DEFS[wpnId];
+                    slot.innerHTML = `<span style="color:${def.color}">${def.icon}</span><span class="subscript">${def.sub || ''}</span>`;
+                    slot.onclick = () => {
+                        state.selectedWeaponIdx = i;
+                        updateUI();
+                    };
+                } else {
+                    slot.innerHTML = '<span class="inv-empty">.</span>';
+                }
+                UI.weaponBar.appendChild(slot);
+            }
         }
 
         function renderBadges() {
             UI.badgesArea.innerHTML = '';
             state.badges.forEach(b => {
-                const div = document.createElement('div'); div.className = `badge ${b.type}`; div.innerHTML = b.icon;
-                if (b.type === 'buff') { const rounds = state.activeBuffs[b.id]; if (rounds > 0) div.innerHTML += `<span class="timer">${rounds}</span>`; } 
-                else if (b.id === 'comp_drone' && state.perms.drone_count > 1) { div.innerHTML += `<span class="timer">${state.perms.drone_count}</span>`; } UI.badgesArea.appendChild(div);
+                const div = document.createElement('div');
+                div.className = `badge ${b.type}`;
+                div.innerHTML = b.icon;
+                if (b.type === 'buff') {
+                    const rounds = state.activeBuffs[b.id];
+                    if (rounds > 0) div.innerHTML += `<span class="timer">${rounds}</span>`;
+                } else if (b.id === 'comp_drone' && state.perms.drone_count > 1) {
+                    div.innerHTML += `<span class="timer">${state.perms.drone_count}</span>`;
+                }
+                UI.badgesArea.appendChild(div);
             });
         }
 
         function engageAbility() {
             if (state.selectedInv >= 0 && state.inventory[state.selectedInv]) {
-                const itemId = state.inventory[state.selectedInv]; state.inventory.splice(state.selectedInv, 1); state.selectedInv = -1;
-                if (itemId === 'smart_bomb') { triggerSmartBomb(); } else { activateBuff(itemId); } ToneSynth.play('powerup'); updateUI(); renderInventory(); renderBadges();
+                const itemId = state.inventory[state.selectedInv];
+                state.inventory.splice(state.selectedInv, 1);
+                state.selectedInv = -1;
+                
+                if (itemId === 'smart_bomb') {
+                    triggerSmartBomb();
+                } else {
+                    activateBuff(itemId);
+                }
+                
+                ToneSynth.play('powerup');
+                updateUI();
+                renderInventory();
+                renderBadges();
             }
         }
         
         function triggerSmartBomb() {
-            showMsg("SMART BOMB DETONATED", "red"); document.getElementById('game-container').classList.add('damage-flash');
+            showMsg("SMART BOMB DETONATED", "red");
+            document.getElementById('game-container').classList.add('damage-flash');
             setTimeout(() => document.getElementById('game-container').classList.remove('damage-flash'), 1000);
-            state.shake = 50; ToneSynth.play('smartbomb');
-            for (let i = state.enemies.length - 1; i >= 0; i--) { let e = state.enemies[i]; if (!e.isMegaBoss) { e.dead = true; createParticles(e.x, e.y, e.color, 15); } else { e.hp -= 10; createParticles(e.x, e.y, 'white', 20); } }
-        }
-
-        function startGame() { ToneSynth.init(); document.getElementById('start-screen').classList.add('hidden'); state.active = true; resize(); MusicPlayer.init(); MusicPlayer.startPlayback(); startWaveCountdown(); }
-        function startWaveCountdown() {
-            MusicPlayer.checkTrack(state.wave); state.countingDown = true; countdownLayer.classList.remove('hidden'); let count = 3;
-            const pulse = (text) => { countdownText.innerText = text; countdownText.classList.remove('countdown-text'); void countdownText.offsetWidth; countdownText.classList.add('countdown-text'); ToneSynth.play('count'); }; pulse(count);
-            const interval = setInterval(() => { count--; if(count > 0) { pulse(count); } else if (count === 0) { if (state.wave % 15 === 0) { pulse("BOSS DETECTED"); countdownText.style.color = "#ef4444"; ToneSynth.play('warning'); } else if (state.wave % 5 === 0) { pulse("ELITE INBOUND"); countdownText.style.color = CONFIG.ERR_COLOR; ToneSynth.play('warning'); } else { pulse("ENGAGE"); countdownText.style.color = CONFIG.SAFE_COLOR; ToneSynth.play('start'); } } else { clearInterval(interval); countdownLayer.classList.add('hidden'); countdownText.style.color = "white"; state.countingDown = false; state.waveActive = true; spawnWaveBatch(); } }, 800);
-        }
-
-        function spawnWaveBatch() {
-            if(state.wave % 5 === 0) { state.grenades = Math.min(5, state.grenades + 2); showMsg("AMMO RELOAD", CONFIG.SAFE_COLOR); }
-            Object.keys(state.activeBuffs).forEach(key => { if(state.activeBuffs[key] > 0) { state.activeBuffs[key]--; if(state.activeBuffs[key] <= 0) { if (key === 'coolant') state.heatDecayMulti = Math.max(1.0, state.heatDecayMulti - 2); if (key === 'cryo_stab') state.heatDecayMulti = Math.max(1.0, state.heatDecayMulti - 4); if (key === 'shield_boost') state.shieldTime = 0; state.badges = state.badges.filter(b => b.id !== key); } } }); renderBadges(); updateUI();
-            const isBossWave = state.wave % 15 === 0; let count = 0; state.pendingSpawns = 0;
-            if (isBossWave) { let bossName = state.wave % 30 === 0 ? "RAGNAROK" : "OBLIVION"; if(state.wave === 15) bossName = "OBLIVION"; showMsg(`WARNING: ${bossName}`, "#ef4444"); state.pendingSpawns = 1; setTimeout(() => { spawnEnemy({ name: bossName }); state.pendingSpawns--; }, 2000); } 
-            else {
-                let waveTier = Math.floor(state.wave / 5); count = 3 + Math.floor(state.wave / 2); state.pendingSpawns = count; 
-                let forcedEliteCount = 0; const MAX_FORCED_ELITES = 3; let anomalyCount = 0; const MAX_ANOMALIES = 1 + Math.floor(state.wave / 30);
-                for(let i=0; i<count; i++) { setTimeout(() => { let spawnType = null; let allowAnomaly = anomalyCount < MAX_ANOMALIES; if (allowAnomaly && state.wave >= 60 && Math.random() < 0.02) { spawnType = { name: "RAGNAROK" }; showMsg("ANOMALY: RAGNAROK", "red"); anomalyCount++; } else if (allowAnomaly && state.wave >= 20 && Math.random() < 0.03) { spawnType = { name: "OBLIVION" }; showMsg("ANOMALY: OBLIVION", "red"); anomalyCount++; } else { let forcedElite = ELITE_ROSTER.find(e => e.introWave === state.wave); if(forcedElite) { if(forcedEliteCount < MAX_FORCED_ELITES && Math.random() < 0.8) { spawnType = forcedElite; forcedEliteCount++; } } else { let maxIdx = -1; if (state.wave >= 55) maxIdx = 10; else if (state.wave >= 50) maxIdx = 9; else if (state.wave >= 45) maxIdx = 8; else if (state.wave >= 40) maxIdx = 7; else if (state.wave >= 35) maxIdx = 6; else if (state.wave >= 31) maxIdx = 5; else if (state.wave >= 25) maxIdx = 4; else if (state.wave >= 20) maxIdx = 3; else if (state.wave >= 16) maxIdx = 2; else if (state.wave >= 10) maxIdx = 1; else if (state.wave >= 5) maxIdx = 0; if (maxIdx >= 0 && Math.random() < 0.15) { let rnd = Math.floor(Math.random() * (maxIdx + 1)); spawnType = ELITE_ROSTER[rnd]; } } } spawnEnemy(spawnType); state.pendingSpawns--; }, i * 800); }
+            state.shake = 50;
+            ToneSynth.play('smartbomb');
+            for (let i = state.enemies.length - 1; i >= 0; i--) {
+                let e = state.enemies[i];
+                if (!e.isMegaBoss) { e.dead = true; createParticles(e.x, e.y, e.color, 15); }
+                else { e.hp -= 10; createParticles(e.x, e.y, 'white', 20); }
             }
         }
 
-        function gameOver() { state.active = false; state.highScore = Math.max(state.highScore, state.score); setText(UI.goScore, state.score); setText(UI.goHigh, state.highScore); document.getElementById('game-over-screen').classList.remove('hidden'); document.getElementById('game-container').style.filter = "grayscale(100%) blur(5px)"; }
+        function fire() {
+            ToneSynth.init(); 
+            if (!state.active || state.countingDown || state.stunTime > 0) return;
+
+            if (state.weapon === 'grenade') {
+                if (state.grenades > 0) {
+                    state.grenades--;
+                    state.projectiles.push({ type: 'laser', x: state.params.gx, mode: state.mode, life: CONFIG.LASER_DURATION, width: 2 });
+                    ToneSynth.play('shoot');
+                    toggleGrenade();
+                }
+                return;
+            }
+
+            const weaponId = state.weapons[state.selectedWeaponIdx] || 'standard';
+            const weaponDef = WEAPON_DEFS[weaponId];
+            let heatCost = weaponDef.heat;
+            
+            const { a, h, k } = calculateTrajectory();
+            if (Math.abs(h) < 2) { showMsg("RANGE TOO SHORT", CONFIG.ERR_COLOR); return; }
+            
+            let jammed = false;
+            if (state.jamTime > 0) { jammed = true; ToneSynth.play('jam'); } 
+            else if (state.noHeatTime <= 0) {
+                state.missStreak += heatCost;
+                if (state.missStreak >= CONFIG.JAM_THRESHOLD) { checkJam(); jammed = true; }
+            }
+            
+            if (jammed) {
+                 let rA = (Math.random() * 0.2) + 0.1;
+                 let rH = (Math.random() - 0.5) * 20;
+                 let rK = state.mode === 'sky' ? -rA * rH * rH : rA * rH * rH; 
+                 if(state.mode==='sky' && rK < 2) rK = 2;
+                 if(state.mode==='sub' && rK > -2) rK = -2;
+                 
+                 state.projectiles.push({
+                     type: 'jammed',
+                     weaponId: 'standard', 
+                     mode: state.mode,
+                     config: { a: state.mode === 'sky' ? -rA : rA, h: rH, k: rK },
+                     x: 0, y: 0,
+                     dir: (Math.random() > 0.5 ? 1 : -1),
+                     trail: [],
+                     distanceTraveled: 0
+                 });
+                 return;
+            }
+
+            ToneSynth.play('shoot');
+            
+            let proj = {
+                type: weaponDef.type, 
+                weaponId: weaponId,
+                mode: state.mode, 
+                config: { a, h, k }, 
+                x: 0, y: 0, 
+                dir: h > 0 ? 1 : -1, 
+                trail: [], 
+                distanceTraveled: 0,
+                pierce: weaponDef.pierce || 0,
+                bounces: 3,
+                timeAlive: 0 
+            };
+            
+            if (weaponDef.type === 'linear') {
+                let speed = weaponDef.speed;
+                let dx = h; let dy = k;
+                let mag = Math.sqrt(dx*dx + dy*dy);
+                proj.vx = (dx/mag) * speed;
+                proj.vy = (dy/mag) * speed;
+            }
+            
+            state.projectiles.push(proj);
+            updateUI();
+        }
+
+        function takeDamage(dmgAmount) {
+            if (!state.active) return; 
+            if(Debugger.god) return;
+            ToneSynth.play('warning');
+            
+            let dmg = state.shieldTime > 0 ? (dmgAmount * 0.5) : dmgAmount;
+            state.hp -= dmg;
+            
+            if (state.hp < 0) state.hp = 0;
+            
+            state.shake = 20;
+            document.getElementById('game-container').classList.add('damage-flash');
+            setTimeout(() => document.getElementById('game-container').classList.remove('damage-flash'), 500);
+            updateUI();
+            
+            if(state.hp <= 0) {
+                gameOver();
+            }
+        }
+
+        function spawnEnemy(forceEliteType = null) {
+            if(!state.waveActive) return;
+            const speedBase = 1 + (state.wave * 0.05); 
+            let isSub = Math.random() > 0.6;
+            let spawnX = (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random()*10);
+            if(forceEliteType) spawnX *= 1.5; else spawnX *= 1.5; 
+            let spawnY = isSub ? -Math.random()*12 - 2 : Math.random()*12 + 2; 
+            
+            let type = isSub ? 'mole' : 'drone';
+            let hp = 1;
+            let speed = speedBase * (Math.random() + 0.5);
+            let color = isSub ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR;
+            let score = 100;
+            let sides = isSub ? 3 : 4;
+            let isElite = false;
+            let isMegaBoss = false;
+            let name = ""; 
+            
+            let weaverPhase = 0; 
+            let hasShield = false; 
+            let constructTimer = 0; 
+            let mimicTimer = 0; 
+
+            if (forceEliteType) {
+                if (forceEliteType.name === "OBLIVION" || forceEliteType.name === "RAGNAROK") {
+                    isMegaBoss = true;
+                    type = 'megaboss';
+                    name = forceEliteType.name;
+                    hp = forceEliteType.name === "RAGNAROK" ? 50 : 30; 
+                    speed = 1.2; 
+                    color = '#ef4444'; 
+                    score = 5000;
+                    sides = 12;
+                } else {
+                    isElite = true;
+                    type = 'elite';
+                    name = forceEliteType.name;
+                    hp = forceEliteType.hp;
+                    speed = forceEliteType.speed * speedBase; 
+                    color = forceEliteType.color;
+                    score = forceEliteType.score;
+                    sides = forceEliteType.sides;
+                    
+                    if (name === 'WEAVER') weaverPhase = Math.random() * Math.PI * 2;
+                    if (name === 'AEGIS') hasShield = true;
+                }
+            }
+
+            let blinkCharges = (isElite && name === "PHANTOM") ? 3 : 0;
+            if(isMegaBoss && name === "RAGNAROK") blinkCharges = 3;
+
+            state.enemies.push({
+                x: spawnX, y: spawnY, baseY: spawnY, type: type, eliteName: name, speed: speed, homing: false,
+                dead: false, hp: hp, maxHp: hp, isElite: isElite, isMegaBoss: isMegaBoss, color: color, sides: sides,
+                hasDodged: false, phaseShiftTimer: 0, bounceVel: 0, isDying: false,
+                viperCooldown: 7.0, shotsFired: 0, maxShots: 3,
+                oblivionCooldown: 6.0, teleportCount: 0,
+                blinkCharges: blinkCharges, blinkTimer: 0,
+                weaverPhase: weaverPhase,
+                hasShield: hasShield,
+                constructTimer: 0, mimicTimer: 0
+            });
+        }
+        
+        function spawnPowerup() {
+            if(!state.active || state.countingDown) return;
+            let type = 'hp';
+            if (state.hp < state.maxHp) { if (Math.random() > 0.7) type = 'shield'; } 
+            else { if (Math.random() > 0.3) return; type = 'shield'; }
+            let spawnX = (Math.random() > 0.5 ? 1 : -1) * 60; 
+            let safeY = (Math.random() * 10) + 5; 
+            if (Math.random() > 0.5) safeY *= -1;
+            state.powerups.push({ type: type, x: spawnX, y: safeY, vx: (spawnX > 0 ? -1 : 1) * 5, dead: false });
+        }
+
+        function startWaveCountdown() {
+            MusicPlayer.checkTrack(state.wave);
+            state.countingDown = true;
+            countdownLayer.classList.remove('hidden');
+            let count = 3;
+            const pulse = (text) => {
+                countdownText.innerText = text;
+                countdownText.classList.remove('countdown-text');
+                void countdownText.offsetWidth; 
+                countdownText.classList.add('countdown-text');
+                ToneSynth.play('count'); 
+            };
+            pulse(count);
+            const interval = setInterval(() => {
+                count--;
+                if(count > 0) { pulse(count); } 
+                else if (count === 0) {
+                    if (state.wave % 15 === 0) { pulse("BOSS DETECTED"); countdownText.style.color = "#ef4444"; ToneSynth.play('warning'); }
+                    else if (state.wave % 5 === 0) { pulse("ELITE INBOUND"); countdownText.style.color = CONFIG.ERR_COLOR; ToneSynth.play('warning'); } 
+                    else { pulse("ENGAGE"); countdownText.style.color = CONFIG.SAFE_COLOR; ToneSynth.play('start'); }
+                } else {
+                    clearInterval(interval);
+                    countdownLayer.classList.add('hidden');
+                    countdownText.style.color = "white"; 
+                    state.countingDown = false;
+                    state.waveActive = true;
+                    spawnWaveBatch();
+                }
+            }, 800);
+        }
+
+        function spawnWaveBatch() {
+            if(state.wave % 5 === 0) {
+                state.grenades = Math.min(5, state.grenades + 2);
+                showMsg("AMMO RELOAD", CONFIG.SAFE_COLOR);
+            }
+            Object.keys(state.activeBuffs).forEach(key => {
+                if(state.activeBuffs[key] > 0) {
+                    state.activeBuffs[key]--;
+                    if(state.activeBuffs[key] <= 0) {
+                         if (key === 'coolant') state.heatDecayMulti = Math.max(1.0, state.heatDecayMulti - 2);
+                         if (key === 'cryo_stab') state.heatDecayMulti = Math.max(1.0, state.heatDecayMulti - 4);
+                         if (key === 'shield_boost') state.shieldTime = 0;
+                         state.badges = state.badges.filter(b => b.id !== key);
+                    }
+                }
+            });
+            renderBadges();
+            updateUI();
+            
+            const isBossWave = state.wave % 15 === 0;
+            let count = 0;
+            state.pendingSpawns = 0;
+
+            if (isBossWave) {
+                 let bossName = state.wave % 30 === 0 ? "RAGNAROK" : "OBLIVION";
+                 if(state.wave === 15) bossName = "OBLIVION"; 
+                 showMsg(`WARNING: ${bossName}`, "#ef4444");
+                 state.pendingSpawns = 1; 
+                 setTimeout(() => { spawnEnemy({ name: bossName }); state.pendingSpawns--; }, 2000);
+            } 
+            else {
+                let waveTier = Math.floor(state.wave / 5);
+                count = 3 + Math.floor(state.wave / 2);
+                state.pendingSpawns = count; 
+                
+                let forcedEliteCount = 0;
+                const MAX_FORCED_ELITES = 3;
+                let anomalyCount = 0;
+                const MAX_ANOMALIES = 1 + Math.floor(state.wave / 30);
+
+                for(let i=0; i<count; i++) {
+                    setTimeout(() => {
+                        let spawnType = null;
+                        let allowAnomaly = anomalyCount < MAX_ANOMALIES;
+                        
+                        if (allowAnomaly && state.wave >= 60 && Math.random() < 0.02) {
+                             spawnType = { name: "RAGNAROK" }; showMsg("ANOMALY: RAGNAROK", "red"); anomalyCount++;
+                        }
+                        else if (allowAnomaly && state.wave >= 20 && Math.random() < 0.03) {
+                             spawnType = { name: "OBLIVION" }; showMsg("ANOMALY: OBLIVION", "red"); anomalyCount++;
+                        }
+                        else {
+                            let forcedElite = ELITE_ROSTER.find(e => e.introWave === state.wave);
+                            if(forcedElite) {
+                                if(forcedEliteCount < MAX_FORCED_ELITES && Math.random() < 0.8) { spawnType = forcedElite; forcedEliteCount++; }
+                            } else {
+                                let maxIdx = -1;
+                                if (state.wave >= 55) maxIdx = 10; else if (state.wave >= 50) maxIdx = 9; else if (state.wave >= 45) maxIdx = 8;
+                                else if (state.wave >= 40) maxIdx = 7; else if (state.wave >= 35) maxIdx = 6; else if (state.wave >= 31) maxIdx = 5;
+                                else if (state.wave >= 25) maxIdx = 4; else if (state.wave >= 20) maxIdx = 3; else if (state.wave >= 16) maxIdx = 2;
+                                else if (state.wave >= 10) maxIdx = 1; else if (state.wave >= 5) maxIdx = 0;
+                                
+                                if (maxIdx >= 0 && Math.random() < 0.15) { 
+                                     let rnd = Math.floor(Math.random() * (maxIdx + 1));
+                                     spawnType = ELITE_ROSTER[rnd];
+                                }
+                            }
+                        }
+                        spawnEnemy(spawnType);
+                        state.pendingSpawns--;
+                    }, i * 800);
+                }
+            }
+        }
+
+        function gameOver() {
+            state.active = false;
+            state.highScore = Math.max(state.highScore, state.score);
+            setText(UI.goScore, state.score);
+            setText(UI.goHigh, state.highScore);
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            document.getElementById('game-container').style.filter = "grayscale(100%) blur(5px)";
+        }
 
         function restartGame() {
-            ToneSynth.init(); state.hp = CONFIG.MAX_HP; state.maxHp = CONFIG.MAX_HP; state.coolingRate = 1.0; state.heatDecayMulti = 1.0;
+            ToneSynth.init();
+            state.hp = CONFIG.MAX_HP; state.maxHp = CONFIG.MAX_HP; state.coolingRate = 1.0; state.heatDecayMulti = 1.0;
             state.score = 0; state.credits = 0; state.wave = 1; state.grenades = 3;
             state.shieldTime = 0; state.jamTime = 0; state.noHeatTime = 0; state.missStreak = 0;
             state.stunTime = 0; state.poison = { active: false, timer: 0, damageTaken: 0 };
@@ -761,25 +1273,85 @@
         }
 
         function update(dt) {
-            if(!state.active) return; dt *= state.timeScale;
+            if(!state.active) return;
+            dt *= state.timeScale;
+
             if(state.stunTime > 0) { state.stunTime -= dt; if(state.stunTime <= 0) { showMsg("SYSTEM ONLINE", CONFIG.SAFE_COLOR); updateUI(); } }
             if(state.poison.active) { state.poison.timer += dt; if(state.poison.timer > CONFIG.POISON_TICK_RATE) { state.poison.timer = 0; takeDamage(1); state.poison.damageTaken += 1; createParticles(0, 0, '#4ade80', 5); if(state.poison.damageTaken >= CONFIG.POISON_MAX_DMG) { state.poison.active = false; showMsg("TOXINS PURGED", "cyan"); } updateUI(); } }
+            
             for(let i=state.gravityFields.length-1; i>=0; i--) { let gf = state.gravityFields[i]; gf.life -= dt; if(gf.life <= 0) { state.gravityFields.splice(i, 1); continue; } state.enemies.forEach(e => { let dx = gf.x - e.x; let dy = gf.y - e.y; let dist = Math.sqrt(dx*dx + dy*dy); if(dist < 3.0 && dist > 0.5) { let pull = 15 * dt; e.x += (dx/dist) * pull; e.y += (dy/dist) * pull; } }); }
             for(let i=state.droneBeams.length-1; i>=0; i--) { state.droneBeams[i].life -= dt; if(state.droneBeams[i].life <= 0) state.droneBeams.splice(i, 1); }
+
             if (state.jamTime <= 0 && state.missStreak > 0) { let decay = (CONFIG.JAM_THRESHOLD * CONFIG.HEAT_DECAY_PERCENT) * state.heatDecayMulti * dt * 10; state.missStreak = Math.max(0, state.missStreak - decay); if(Math.random() < 0.2) updateUI(); }
             if (state.shieldTime > 0 && state.activeBuffs.shield_boost <= 0) { state.shieldTime -= dt; if (state.shieldTime <= 0) updateUI(); }
             if (state.noHeatTime > 0) { state.noHeatTime -= dt; if (state.noHeatTime <= 0) updateUI(); }
             if (state.jamTime > 0) { state.jamTime -= dt * state.coolingRate; if (state.jamTime <= 0) { state.missStreak = 0; showMsg("SYSTEM COOLED", "cyan"); updateUI(); } }
+            
             if (state.activeBuffs.regen_mod > 0) { state.regenTimer += dt; if(state.regenTimer > 5.0) { state.regenTimer = 0; if(state.hp < state.maxHp) { state.hp++; showMsg("NANITE REPAIR", CONFIG.SAFE_COLOR); createParticles(0, 0, '#4ade80', 8); updateUI(); } } }
+
             if (state.activeBuffs.turret > 0) { state.turretCooldown -= dt; let closest = null; let minDist = 8; state.enemies.forEach(e => { let d = Math.sqrt(e.x*e.x + e.y*e.y); if(d < minDist) { minDist = d; closest = e; } }); if(closest) { state.turretTarget = closest; if (state.turretCooldown <= 0) { state.turretCooldown = 0.5; closest.hp -= 0.5; createParticles(closest.x, closest.y, 'cyan', 3); ToneSynth.play('turret_shoot'); if(closest.hp <= 0) { closest.dead = true; createParticles(closest.x, closest.y, closest.color); state.score += 50; } } } else { state.turretTarget = null; } }
+            
             if (state.perms.drone_count > 0) { state.droneAngle += dt * 1.5; for(let i=0; i<state.perms.drone_count; i++) { state.droneCooldowns[i] -= dt; if (state.droneCooldowns[i] <= 0) { let angle = state.droneAngle + (i * (Math.PI * 2 / 3)); let dx = Math.cos(angle) * 45; let dy = Math.sin(angle) * 45; let closest = null; let minDist = 30; state.enemies.forEach(e => { let d = Math.sqrt(Math.pow(e.x - (dx/CONFIG.SCALE), 2) + Math.pow(e.y - (-dy/CONFIG.SCALE), 2)); if(d < minDist) { minDist = d; closest = e; } }); if (closest) { state.droneCooldowns[i] = 1.2; closest.hp -= 0.5; state.droneBeams.push({ x1: dx/CONFIG.SCALE, y1: -dy/CONFIG.SCALE, x2: closest.x, y2: closest.y, life: 0.25, color: '#e879f9' }); ToneSynth.play('shoot'); if(closest.hp <= 0) { closest.dead = true; createParticles(closest.x, closest.y, closest.color); state.score += 50; } } } } }
+
             if (state.enemies.length === 0 && state.pendingSpawns === 0 && state.waveActive && !state.countingDown) { state.waveActive = false; setTimeout(() => { if (Debugger.bossRush) { let nextBossWave = (Math.floor(state.wave / 5) + 1) * 5; state.wave = nextBossWave; } else { state.wave++; } updateUI(); if (state.wave % 10 === 0) { openShop(); } else { startWaveCountdown(); } }, 1000); }
             if (state.active && !state.countingDown && Math.random() < 0.0005) { spawnPowerup(); }
+
             for (let i = state.powerups.length - 1; i >= 0; i--) { let pup = state.powerups[i]; pup.x += pup.vx * dt; pup.y += Math.sin(Date.now()/500) * 0.02; if (Math.abs(pup.x) > 70) state.powerups.splice(i, 1); }
-            for (let i = state.enemyProjectiles.length - 1; i >= 0; i--) { let ep = state.enemyProjectiles[i]; ep.x += ep.vx * dt; ep.y += ep.vy * dt; if(ep.timer === undefined) ep.timer = 0; ep.timer += dt; if (Math.abs(ep.x) < 2 && Math.abs(ep.y) < 2) { if (!state.poison.active) { state.poison.active = true; state.poison.damageTaken = 0; showMsg("HULL BREACH - TOXINS DETECTED", "red"); ToneSynth.play('warning'); } state.enemyProjectiles.splice(i, 1); continue; } if (ep.timer > 0.5) { let hitEnemy = false; for(let k=state.enemies.length-1; k>=0; k--) { let target = state.enemies[k]; let distSq = (ep.x - target.x)**2 + (ep.y - target.y)**2; if(distSq < 9) { hitEnemy = true; createShockwave(ep.x, ep.y, '#4ade80'); ToneSynth.play('explode'); let splashDmg = (1 + state.perms.dmg_up) * 0.25; state.enemies.forEach(nearby => { let d2 = (nearby.x - ep.x)**2 + (nearby.y - ep.y)**2; if(d2 < 25) { nearby.hp -= splashDmg; createParticles(nearby.x, nearby.y, '#4ade80', 2); } }); break; } } if(hitEnemy) { state.enemyProjectiles.splice(i, 1); continue; } } if(Math.abs(ep.x) > 60 || Math.abs(ep.y) > 40) state.enemyProjectiles.splice(i, 1); }
-            for (let i = state.projectiles.length - 1; i >= 0; i--) { let p = state.projectiles[i]; if(p.timeAlive === undefined) p.timeAlive = 0; p.timeAlive += dt; if (p.type === 'laser') { p.life -= dt; if(p.life <= 0) { state.projectiles.splice(i, 1); continue; } state.enemies.forEach(e => { if (Math.abs(e.x - p.x) < p.width) { if ((p.mode === 'sky' && e.y > 0) || (p.mode === 'sub' && e.y < 0)) { e.hp -= 5 * dt; if (e.hp <= 0) { e.dead = true; createParticles(e.x, e.y, e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR)); ToneSynth.play('hit'); let bonus = state.activeBuffs.scavenger > 0 ? 1.5 : 1; state.score += e.isElite ? 500 : 20; state.credits += Math.ceil(2 * bonus); } } } }); state.powerups.forEach((pup, idx) => { if (Math.abs(pup.x - p.x) < p.width) { if ((p.mode === 'sky' && pup.y > 0) || (p.mode === 'sub' && pup.y < 0)) { state.powerups.splice(idx, 1); createParticles(pup.x, pup.y, 'white'); ToneSynth.play('powerup'); if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); if (pup.type === 'hp') { state.hp = Math.min(CONFIG.MAX_HP, state.hp + 1); showMsg("HP RESTORED", CONFIG.SAFE_COLOR); } else if (pup.type === 'shield') { state.shieldTime = 10; showMsg("SHIELD ACTIVE", CONFIG.SAFE_COLOR); } updateUI(); } } }); continue; } if (p.type === 'linear') { p.x += p.vx * dt; p.y += p.vy * dt; } else if (p.type === 'jammed') { p.x += p.dir * 15 * dt; p.y = p.config.a * Math.pow(p.x - p.config.h, 2) + p.config.k + Math.sin(p.x * 5) * 2; } else { if (p.unstable) { p.distanceTraveled += Math.abs(p.dir * 25 * dt); if (p.distanceTraveled > 5 + Math.random() * 10) { createParticles(p.x, p.y, 'yellow'); ToneSynth.play('hit'); state.projectiles.splice(i, 1); continue; } } p.x += p.dir * 25 * dt; if (p.type === 'sine') { let baseX = p.x; let baseY = p.config.a * Math.pow(baseX - p.config.h, 2) + p.config.k; let slope = 2 * p.config.a * (baseX - p.config.h); let normalAngle = Math.atan(slope) + Math.PI/2; let offset = Math.sin(baseX * 2) * 2; p.y = baseY + Math.sin(normalAngle) * offset; } else { p.y = p.config.a * Math.pow(p.x - p.config.h, 2) + p.config.k; } if (p.type === 'split' && !p.hasSplit && Math.abs(p.x - p.config.h) < 0.5) { p.hasSplit = true; state.projectiles.push({ ...p, type:'ballistic', config: { ...p.config, a: p.config.a * 2.2 }, hasSplit: true }); state.projectiles.push({ ...p, type:'ballistic', config: { ...p.config, a: p.config.a * 0.5 }, hasSplit: true }); } } if (p.type !== 'linear') { if (Math.random() > 0.5) p.trail.push({x:p.x, y:p.y, life:0.5}); let ignoreGround = p.timeAlive < 0.2; if (!ignoreGround && ((p.mode === 'sky' && p.y < -0.5) || (p.mode === 'sub' && p.y > 0.5))) { createParticles(p.x, 0, p.mode === 'sky' ? CONFIG.SKY_COLOR : CONFIG.SUB_COLOR); state.projectiles.splice(i, 1); continue; } } else { if (Math.abs(p.x) > 60 || Math.abs(p.y) > 40) { state.projectiles.splice(i, 1); continue; } } let hit = false; for(let k=state.enemyProjectiles.length-1; k>=0; k--) { let ep = state.enemyProjectiles[k]; let dx = p.x - ep.x; let dy = p.y - ep.y; if(dx*dx + dy*dy < 4) { createShockwave(ep.x, ep.y, '#4ade80'); ToneSynth.play('explode'); state.enemyProjectiles.splice(k, 1); hit = true; state.enemies.forEach(e => { if(Math.abs(e.x - ep.x) < 8 && Math.abs(e.y - ep.y) < 8) e.hp -= 3; }); break; } } if(hit && p.type !== 'linear') { state.projectiles.splice(i, 1); continue; } state.enemies.forEach(e => { if (hit || e.dead) return; let dx = p.x - e.x; let dy = p.y - e.y; let distSq = dx*dx + dy*dy; if (distSq < 144 && e.blinkCharges > 0 && e.blinkTimer <= 0 && (e.eliteName === 'PHANTOM' || e.isMegaBoss)) { let closing = true; if (p.type !== 'linear') { if ((p.dir > 0 && dx < 0) || (p.dir < 0 && dx > 0)) { /* Approaching */ } else closing = false; } if (closing) { e.blinkCharges--; e.blinkTimer = 2.0; let pushDir = e.x > 0 ? 1 : -1; let setback = e.isMegaBoss ? 8 : 15; if(Math.abs(e.x) > 40) setback = 5; e.x += pushDir * setback; createParticles(e.x - (pushDir*setback), e.y, 'magenta'); ToneSynth.play('warp'); return; } } if (e.eliteName === 'AEGIS' && e.hasShield) { if (dx*dx + dy*dy < 9) { hit = true; e.hasShield = false; createShockwave(e.x, e.y, '#2563eb'); ToneSynth.play('shield_break'); return; } } if (dx*dx + dy*dy < 4) { hit = true; let damage = (1 + state.perms.dmg_up); let wDef = WEAPON_DEFS[p.weaponId]; if(p.type === 'sine') damage *= 2.0; if(p.type === 'linear') damage *= 4.0; if(p.type === 'bounce') damage *= 2.5; if(p.type === 'gravity') damage *= 0.5; if(p.type === 'jammed') damage *= 0.3; if (state.activeBuffs.focus_fire > 0) damage *= 2; e.hp -= damage; ToneSynth.play('hit'); if(p.type === 'gravity') { state.gravityFields.push({ x: e.x, y: e.y, life: 2.5 }); createShockwave(e.x, e.y, 'purple'); } if(p.type === 'bounce' && p.bounces > 0) { let nearest = null; let minD = 20; state.enemies.forEach(other => { if(other !== e && !other.dead) { let d = Math.sqrt((other.x - e.x)**2 + (other.y - e.y)**2); if(d < minD) { minD = d; nearest = other; } } }); if(nearest) { p.bounces--; nearest.hp -= damage; state.droneBeams.push({ x1: e.x, y1: e.y, x2: nearest.x, y2: nearest.y, life: 0.2, color: 'yellow' }); hit = true; } } if(e.hp <= 0) { e.dead = true; if (e.eliteName === 'STATIC' || (e.name === 'RAGNAROK' && Math.random() > 0.5)) { createShockwave(e.x, e.y, 'yellow'); if (Math.abs(e.x) < 15) { state.stunTime = CONFIG.STUN_DURATION; showMsg("EMP DISCHARGE - STUNNED", "yellow"); ToneSynth.play('stun'); } } if (state.activeBuffs.reactive > 0) { createShockwave(e.x, e.y, 'orange'); state.enemies.forEach(other => { if(other !== e && Math.abs(other.x - e.x) < 10 && Math.abs(other.y - e.y) < 10) other.hp -= 2; }); } state.score += e.isElite ? 500 : 100; let baseCr = e.isElite ? 15 : 3; if (e.isMegaBoss) baseCr = 50; if (e.eliteName === 'LEECH') baseCr = 0; let bonus = state.activeBuffs.scavenger > 0 ? 1.5 : 1; state.credits += Math.ceil(baseCr * bonus); if (e.eliteName === 'DIVIDER' || e.isMegaBoss) { let splits = e.isMegaBoss ? 3 : 2; for(let k=0; k<splits; k++) { state.enemies.push({ x: e.x, y: e.y + (k==0?3:-3), baseY: e.y + (k==0?3:-3), type: 'drone', speed: e.speed * 1.5, homing: true, dead: false, hp: 2, maxHp: 2, color: CONFIG.ELITE_COLOR, sides: 3, isElite: false }); } } createParticles(e.x, e.y, e.color); } else { createParticles(e.x, e.y, 'white'); } if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); updateUI(); } }); state.powerups.forEach((pup, idx) => { if (hit) return; let dx = p.x - pup.x; let dy = p.y - pup.y; if (dx*dx + dy*dy < 9) { hit = true; state.powerups.splice(idx, 1); createParticles(pup.x, pup.y, 'white'); ToneSynth.play('powerup'); if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); if (pup.type === 'hp') { state.hp = Math.min(CONFIG.MAX_HP, state.hp + 1); showMsg("HP RESTORED", CONFIG.SAFE_COLOR); } else if (pup.type === 'shield') { state.shieldTime = 10; showMsg("SHIELD ACTIVE", CONFIG.SAFE_COLOR); } updateUI(); } }); if (p.type === 'linear') { if (hit) { p.pierce--; if (p.pierce <= 0) state.projectiles.splice(i, 1); } } else { if (hit && p.type !== 'bounce') state.projectiles.splice(i, 1); else if (hit && p.type === 'bounce' && p.bounces <= 0) state.projectiles.splice(i, 1); }
+
+            for (let i = state.enemyProjectiles.length - 1; i >= 0; i--) {
+                let ep = state.enemyProjectiles[i]; ep.x += ep.vx * dt; ep.y += ep.vy * dt; if(ep.timer === undefined) ep.timer = 0; ep.timer += dt; 
+                if (Math.abs(ep.x) < 2 && Math.abs(ep.y) < 2) { if (!state.poison.active) { state.poison.active = true; state.poison.damageTaken = 0; showMsg("HULL BREACH - TOXINS DETECTED", "red"); ToneSynth.play('warning'); } state.enemyProjectiles.splice(i, 1); continue; }
+                if (ep.timer > 0.5) { let hitEnemy = false; for(let k=state.enemies.length-1; k>=0; k--) { let target = state.enemies[k]; let distSq = (ep.x - target.x)**2 + (ep.y - target.y)**2; if(distSq < 9) { hitEnemy = true; createShockwave(ep.x, ep.y, '#4ade80'); ToneSynth.play('explode'); let splashDmg = (1 + state.perms.dmg_up) * 0.25; state.enemies.forEach(nearby => { let d2 = (nearby.x - ep.x)**2 + (nearby.y - ep.y)**2; if(d2 < 25) { nearby.hp -= splashDmg; createParticles(nearby.x, nearby.y, '#4ade80', 2); } }); break; } } if(hitEnemy) { state.enemyProjectiles.splice(i, 1); continue; } }
+                if(Math.abs(ep.x) > 60 || Math.abs(ep.y) > 40) state.enemyProjectiles.splice(i, 1);
             }
-            state.particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * (p.type === 'shock' ? 1 : 2); if(p.type === 'shock') p.size += dt * 30; }); state.particles = state.particles.filter(p => p.life > 0); if (state.shake > 0) state.shake -= dt * 60;
+
+            for (let i = state.projectiles.length - 1; i >= 0; i--) {
+                let p = state.projectiles[i];
+                if(p.timeAlive === undefined) p.timeAlive = 0; p.timeAlive += dt;
+
+                if (p.type === 'laser') {
+                    p.life -= dt; if(p.life <= 0) { state.projectiles.splice(i, 1); continue; }
+                    state.enemies.forEach(e => { if (Math.abs(e.x - p.x) < p.width) { if ((p.mode === 'sky' && e.y > 0) || (p.mode === 'sub' && e.y < 0)) { e.hp -= 5 * dt; if (e.hp <= 0) { e.dead = true; createParticles(e.x, e.y, e.isElite ? CONFIG.ELITE_COLOR : (e.type === 'mole' ? CONFIG.SUB_COLOR : CONFIG.SKY_COLOR)); ToneSynth.play('hit'); let bonus = state.activeBuffs.scavenger > 0 ? 1.5 : 1; state.score += e.isElite ? 500 : 20; state.credits += Math.ceil(2 * bonus); } } } });
+                    state.powerups.forEach((pup, idx) => { if (Math.abs(pup.x - p.x) < p.width) { if ((p.mode === 'sky' && pup.y > 0) || (p.mode === 'sub' && pup.y < 0)) { state.powerups.splice(idx, 1); createParticles(pup.x, pup.y, 'white'); ToneSynth.play('powerup'); if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); if (pup.type === 'hp') { state.hp = Math.min(CONFIG.MAX_HP, state.hp + 1); showMsg("HP RESTORED", CONFIG.SAFE_COLOR); } else if (pup.type === 'shield') { state.shieldTime = 10; showMsg("SHIELD ACTIVE", CONFIG.SAFE_COLOR); } updateUI(); } } });
+                    continue; 
+                }
+
+                if (p.type === 'linear') { p.x += p.vx * dt; p.y += p.vy * dt; } 
+                else if (p.type === 'jammed') { p.x += p.dir * 15 * dt; p.y = p.config.a * Math.pow(p.x - p.config.h, 2) + p.config.k + Math.sin(p.x * 5) * 2; }
+                else {
+                    if (p.unstable) { p.distanceTraveled += Math.abs(p.dir * 25 * dt); if (p.distanceTraveled > 5 + Math.random() * 10) { createParticles(p.x, p.y, 'yellow'); ToneSynth.play('hit'); state.projectiles.splice(i, 1); continue; } }
+                    p.x += p.dir * 25 * dt; 
+                    if (p.type === 'sine') { let baseX = p.x; let baseY = p.config.a * Math.pow(baseX - p.config.h, 2) + p.config.k; let slope = 2 * p.config.a * (baseX - p.config.h); let normalAngle = Math.atan(slope) + Math.PI/2; let offset = Math.sin(baseX * 2) * 2; p.y = baseY + Math.sin(normalAngle) * offset; } 
+                    else { p.y = p.config.a * Math.pow(p.x - p.config.h, 2) + p.config.k; }
+                    if (p.type === 'split' && !p.hasSplit && Math.abs(p.x - p.config.h) < 0.5) { p.hasSplit = true; state.projectiles.push({ ...p, type:'ballistic', config: { ...p.config, a: p.config.a * 2.2 }, hasSplit: true }); state.projectiles.push({ ...p, type:'ballistic', config: { ...p.config, a: p.config.a * 0.5 }, hasSplit: true }); }
+                }
+
+                if (p.type !== 'linear') { if (Math.random() > 0.5) p.trail.push({x:p.x, y:p.y, life:0.5}); let ignoreGround = p.timeAlive < 0.2; if (!ignoreGround && ((p.mode === 'sky' && p.y < -0.5) || (p.mode === 'sub' && p.y > 0.5))) { createParticles(p.x, 0, p.mode === 'sky' ? CONFIG.SKY_COLOR : CONFIG.SUB_COLOR); state.projectiles.splice(i, 1); continue; } } else { if (Math.abs(p.x) > 60 || Math.abs(p.y) > 40) { state.projectiles.splice(i, 1); continue; } }
+                let hit = false;
+                for(let k=state.enemyProjectiles.length-1; k>=0; k--) { let ep = state.enemyProjectiles[k]; let dx = p.x - ep.x; let dy = p.y - ep.y; if(dx*dx + dy*dy < 4) { createShockwave(ep.x, ep.y, '#4ade80'); ToneSynth.play('explode'); state.enemyProjectiles.splice(k, 1); hit = true; state.enemies.forEach(e => { if(Math.abs(e.x - ep.x) < 8 && Math.abs(e.y - ep.y) < 8) e.hp -= 3; }); break; } }
+                if(hit && p.type !== 'linear') { state.projectiles.splice(i, 1); continue; }
+
+                state.enemies.forEach(e => {
+                    if (hit || e.dead) return;
+                    let dx = p.x - e.x; let dy = p.y - e.y; let distSq = dx*dx + dy*dy;
+                    if (distSq < 144 && e.blinkCharges > 0 && e.blinkTimer <= 0 && (e.eliteName === 'PHANTOM' || e.isMegaBoss)) { let closing = true; if (p.type !== 'linear') { if ((p.dir > 0 && dx < 0) || (p.dir < 0 && dx > 0)) { /* Approaching */ } else closing = false; } if (closing) { e.blinkCharges--; e.blinkTimer = 2.0; let pushDir = e.x > 0 ? 1 : -1; let setback = e.isMegaBoss ? 8 : 15; if(Math.abs(e.x) > 40) setback = 5; e.x += pushDir * setback; createParticles(e.x - (pushDir*setback), e.y, 'magenta'); ToneSynth.play('warp'); return; } }
+                    if (e.eliteName === 'AEGIS' && e.hasShield) { if (dx*dx + dy*dy < 9) { hit = true; e.hasShield = false; createShockwave(e.x, e.y, '#2563eb'); ToneSynth.play('shield_break'); return; } }
+
+                    if (dx*dx + dy*dy < 4) { 
+                        hit = true;
+                        let damage = (1 + state.perms.dmg_up); 
+                        if(p.type === 'sine') damage *= 2.0; if(p.type === 'linear') damage *= 4.0; if(p.type === 'bounce') damage *= 2.5; if(p.type === 'gravity') damage *= 0.5; if(p.type === 'jammed') damage *= 0.3; if (state.activeBuffs.focus_fire > 0) damage *= 2;
+                        e.hp -= damage; ToneSynth.play('hit');
+                        if(p.type === 'gravity') { state.gravityFields.push({ x: e.x, y: e.y, life: 2.5 }); createShockwave(e.x, e.y, 'purple'); }
+                        if(p.type === 'bounce' && p.bounces > 0) { let nearest = null; let minD = 20; state.enemies.forEach(other => { if(other !== e && !other.dead) { let d = Math.sqrt((other.x - e.x)**2 + (other.y - e.y)**2); if(d < minD) { minD = d; nearest = other; } } }); if(nearest) { p.bounces--; nearest.hp -= damage; state.droneBeams.push({ x1: e.x, y1: e.y, x2: nearest.x, y2: nearest.y, life: 0.2, color: 'yellow' }); hit = true; } }
+                        if(e.hp <= 0) { e.dead = true; if (e.eliteName === 'STATIC' || (e.name === 'RAGNAROK' && Math.random() > 0.5)) { createShockwave(e.x, e.y, 'yellow'); if (Math.abs(e.x) < 15) { state.stunTime = CONFIG.STUN_DURATION; showMsg("EMP DISCHARGE - STUNNED", "yellow"); ToneSynth.play('stun'); } } if (state.activeBuffs.reactive > 0) { createShockwave(e.x, e.y, 'orange'); state.enemies.forEach(other => { if(other !== e && Math.abs(other.x - e.x) < 10 && Math.abs(other.y - e.y) < 10) other.hp -= 2; }); } state.score += e.isElite ? 500 : 100; let baseCr = e.isElite ? 15 : 3; if (e.isMegaBoss) baseCr = 50; if (e.eliteName === 'LEECH') baseCr = 0; let bonus = state.activeBuffs.scavenger > 0 ? 1.5 : 1; state.credits += Math.ceil(baseCr * bonus); if (e.eliteName === 'DIVIDER' || e.isMegaBoss) { let splits = e.isMegaBoss ? 3 : 2; for(let k=0; k<splits; k++) { state.enemies.push({ x: e.x, y: e.y + (k==0?3:-3), baseY: e.y + (k==0?3:-3), type: 'drone', speed: e.speed * 1.5, homing: true, dead: false, hp: 2, maxHp: 2, color: CONFIG.ELITE_COLOR, sides: 3, isElite: false }); } } createParticles(e.x, e.y, e.color); } else { createParticles(e.x, e.y, 'white'); }
+                        if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); updateUI();
+                    }
+                });
+                
+                state.powerups.forEach((pup, idx) => { if (hit) return; let dx = p.x - pup.x; let dy = p.y - pup.y; if (dx*dx + dy*dy < 9) { hit = true; state.powerups.splice(idx, 1); createParticles(pup.x, pup.y, 'white'); ToneSynth.play('powerup'); if (state.noHeatTime <= 0) state.missStreak = Math.max(0, state.missStreak - 2); if (pup.type === 'hp') { state.hp = Math.min(CONFIG.MAX_HP, state.hp + 1); showMsg("HP RESTORED", CONFIG.SAFE_COLOR); } else if (pup.type === 'shield') { state.shieldTime = 10; showMsg("SHIELD ACTIVE", CONFIG.SAFE_COLOR); } updateUI(); } });
+                if (p.type === 'linear') { if (hit) { p.pierce--; if (p.pierce <= 0) state.projectiles.splice(i, 1); } } else { if (hit && p.type !== 'bounce') state.projectiles.splice(i, 1); else if (hit && p.type === 'bounce' && p.bounces <= 0) state.projectiles.splice(i, 1); }
+            }
         }
 
         function draw() {
@@ -817,6 +1389,8 @@
         });
 
         // --- ATTACH LISTENERS ---
+        function attachTouch(id, fn) { const el = document.getElementById(id); if(el) { el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); fn(); }, {passive: false}); el.addEventListener('click', fn); } }
+
         UI.inH.addEventListener('input', syncParamsFromInput);
         UI.inA.addEventListener('input', syncParamsFromInput);
         UI.inGx.addEventListener('input', syncParamsFromInput);
